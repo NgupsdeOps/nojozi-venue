@@ -7,10 +7,12 @@ export function Contact() {
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg('');
 
     const { error } = await supabase.from('contacts').insert([
       { name, email, message }
@@ -19,7 +21,7 @@ export function Contact() {
     setLoading(false);
 
     if (error) {
-      alert('Failed to send message: ' + error.message);
+      setErrorMsg('Failed to send message: ' + error.message);
     } else {
       setSubmitted(true);
     }
@@ -31,12 +33,17 @@ export function Contact() {
       <p className="text-stone-600 text-xs mb-8">Send us a message and we'll be in touch shortly.</p>
 
       {submitted ? (
-        <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-8 text-center">
-          <h3 className="text-2xl font-serif text-stone-900 mb-2">Thank you!</h3>
-          <p className="text-stone-600 text-xs">Your message has been received and saved.</p>
+        <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-8 text-center shadow-sm">
+          <h3 className="text-2xl font-serif text-stone-900 mb-2">Thank you, {name}!</h3>
+          <p className="text-stone-600 text-xs">Your message has been successfully received and saved.</p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-6 bg-[#F5F0E8] border border-[#E8E2D9] p-8">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-[#F5F0E8] border border-[#E8E2D9] p-8 shadow-sm">
+          {errorMsg && (
+            <div className="p-3 bg-red-100 border border-red-200 text-red-700 text-xs">
+              {errorMsg}
+            </div>
+          )}
           <div>
             <label className="block text-xs uppercase tracking-widest font-semibold text-stone-700 mb-2">Your Name</label>
             <input
@@ -44,7 +51,8 @@ export function Contact() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-[#FAF7F2] border border-[#E8E2D9] px-4 py-3 text-sm"
+              placeholder="Jane Doe"
+              className="w-full bg-[#FAF7F2] border border-[#E8E2D9] px-4 py-3 text-sm focus:outline-none focus:border-[#D99B26]"
             />
           </div>
           <div>
@@ -54,7 +62,8 @@ export function Contact() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[#FAF7F2] border border-[#E8E2D9] px-4 py-3 text-sm"
+              placeholder="jane@example.com"
+              className="w-full bg-[#FAF7F2] border border-[#E8E2D9] px-4 py-3 text-sm focus:outline-none focus:border-[#D99B26]"
             />
           </div>
           <div>
@@ -64,7 +73,8 @@ export function Contact() {
               rows={4}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full bg-[#FAF7F2] border border-[#E8E2D9] px-4 py-3 text-sm"
+              placeholder="How can we help you?"
+              className="w-full bg-[#FAF7F2] border border-[#E8E2D9] px-4 py-3 text-sm focus:outline-none focus:border-[#D99B26]"
             />
           </div>
           <button
