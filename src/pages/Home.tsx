@@ -42,7 +42,7 @@ const SERVICES = [
   },
 ];
 
-export default function Home() {
+export function Home() {
   return (
     <div className="bg-stone-50 text-stone-900">
       {/* Hero Section */}
@@ -120,3 +120,5 @@ export default function Home() {
     </div>
   );
 }
+
+export default Home;

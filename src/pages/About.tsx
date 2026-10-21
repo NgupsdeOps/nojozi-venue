@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
 // Import venue images from src/assets
@@ -6,7 +5,7 @@ import chairsSetupImg from '../assets/Chairssetup.jpg';
 import poolImg from '../assets/Poolside.jpg';
 import decorSetupImg from '../assets/Decorsetup.jpg';
 
-export default function About() {
+export function About() {
   return (
     <div className="bg-stone-50 min-h-screen text-stone-900">
       {/* Hero Header */}
@@ -50,24 +49,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* Highlights Banner */}
-      <section className="py-16 bg-white border-t border-b border-stone-200">
-        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-8 text-center">
-          <div className="p-6">
-            <h3 className="text-xl font-serif mb-2 text-stone-900">Tailored Decor</h3>
-            <p className="text-stone-600 text-sm">Custom seating, table arrangements, and event setups designed for your vision.</p>
-          </div>
-          <div className="p-6">
-            <h3 className="text-xl font-serif mb-2 text-stone-900">Outdoor & Poolside</h3>
-            <p className="text-stone-600 text-sm">Spacious garden and poolside areas perfect for open-air functions and photoshoots.</p>
-          </div>
-          <div className="p-6">
-            <h3 className="text-xl font-serif mb-2 text-stone-900">Full In-House Support</h3>
-            <p className="text-stone-600 text-sm">Catering services, audio setup, and site coordination to ensure smooth events.</p>
-          </div>
-        </div>
-      </section>
-
       {/* Feature Image Banner */}
       <section className="py-16 max-w-6xl mx-auto px-6">
         <div className="relative rounded-2xl overflow-hidden shadow-xl h-80">
@@ -92,3 +73,5 @@ export default function About() {
     </div>
   );
 }
+
+export default About;
