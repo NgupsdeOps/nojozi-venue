@@ -1,14 +1,64 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export function Admin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Logging in with ' + email);
+    if (email && password) {
+      setIsLoggedIn(true);
+    }
   };
+
+  const handleDemoLogin = () => {
+    setEmail('admin@nojozivenue.co.za');
+    setPassword('demo1234');
+    setIsLoggedIn(true);
+  };
+
+  if (isLoggedIn) {
+    return (
+      <div className="bg-[#FAF7F2] min-h-[80vh] py-16 px-6 font-sans text-stone-900">
+        <div className="max-w-4xl mx-auto bg-[#F5F0E8] border border-[#E8E2D9] p-8 md:p-10">
+          <div className="flex justify-between items-center mb-8 border-b border-[#E8E2D9] pb-4">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-stone-500 font-medium">ADMIN DASHBOARD</p>
+              <h1 className="text-3xl font-serif text-stone-950">Welcome, Venue Manager</h1>
+            </div>
+            <button
+              onClick={() => setIsLoggedIn(false)}
+              className="bg-stone-900 text-white text-xs uppercase tracking-widest font-semibold px-4 py-2 hover:bg-stone-800 transition"
+            >
+              Sign Out
+            </button>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-[#FAF7F2] p-6 border border-[#E8E2D9]">
+              <h3 className="text-xs uppercase tracking-widest text-stone-500 mb-1 font-semibold">Total Quotes</h3>
+              <p className="text-3xl font-serif text-stone-900">12</p>
+            </div>
+            <div className="bg-[#FAF7F2] p-6 border border-[#E8E2D9]">
+              <h3 className="text-xs uppercase tracking-widest text-stone-500 mb-1 font-semibold">Pending Requests</h3>
+              <p className="text-3xl font-serif text-amber-700">4</p>
+            </div>
+            <div className="bg-[#FAF7F2] p-6 border border-[#E8E2D9]">
+              <h3 className="text-xs uppercase tracking-widest text-stone-500 mb-1 font-semibold">Confirmed Bookings</h3>
+              <p className="text-3xl font-serif text-stone-900">8</p>
+            </div>
+          </div>
+
+          <p className="text-xs text-stone-500">
+            Connected to Supabase project: <span className="font-mono text-stone-800">qbwipveuclqzjnfjdxir</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#FAF7F2] min-h-[80vh] flex items-center justify-center py-16 px-6 font-sans text-stone-900">
@@ -45,7 +95,7 @@ export function Admin() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="admin1234"
               className="w-full bg-[#FAF7F2] border border-[#E8E2D9] px-4 py-3 text-sm focus:outline-none focus:border-[#D99B26]"
             />
           </div>
@@ -57,6 +107,16 @@ export function Admin() {
             SIGN IN
           </button>
         </form>
+
+        <div className="mt-4">
+          <button
+            onClick={handleDemoLogin}
+            type="button"
+            className="w-full bg-stone-900 text-white text-xs uppercase tracking-widest font-semibold py-3 hover:bg-stone-800 transition"
+          >
+            ONE-CLICK DEMO SIGN IN
+          </button>
+        </div>
 
         <div className="mt-8 pt-6 border-t border-[#E8E2D9] text-center">
           <Link to="/" className="text-xs text-stone-500 hover:text-stone-900 transition">
