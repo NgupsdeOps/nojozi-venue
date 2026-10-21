@@ -7,7 +7,6 @@ export function Admin() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle admin login logic here
     alert('Logging in with ' + email);
   };
 

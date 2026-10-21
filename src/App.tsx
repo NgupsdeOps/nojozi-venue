@@ -3,15 +3,15 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Home } from './pages/Home';
 import { About } from './pages/About';
-import { Services } from './pages/Services';
-import { Quote } from './pages/Quote';
 import { Contact } from './pages/Contact';
+import { Quote } from './pages/Quote';
 import { Reviews } from './pages/Reviews';
+import { Services } from './pages/Services';
 import { Admin } from './pages/Admin';
 
 export function App() {
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-stone-50 text-stone-900">
+    <div className="min-h-screen flex flex-col justify-between bg-[#FAF7F2]">
       <Navbar />
       <main className="flex-grow">
         <Routes>
