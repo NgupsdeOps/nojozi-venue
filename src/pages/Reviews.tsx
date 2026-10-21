@@ -46,13 +46,14 @@ export function Reviews() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrorMsg('');
 
     try {
-      const { error } = await supabase.from('reviews').insert([
+      // 1. Try full insert with event_type
+      let { error } = await supabase.from('reviews').insert([
         {
           author: author || 'Anonymous Guest',
           event_type: eventType,
@@ -60,6 +61,19 @@ export function Reviews() {
           comment,
         },
       ]);
+
+      // 2. Fallback if event_type column is missing
+      if (error && error.message.includes('column')) {
+        console.warn('Retrying review submission without optional columns:', error.message);
+        const fallbackRes = await supabase.from('reviews').insert([
+          {
+            author: author || 'Anonymous Guest',
+            rating,
+            comment,
+          },
+        ]);
+        error = fallbackRes.error;
+      }
 
       if (error) {
         setErrorMsg('Failed to save review: ' + error.message);
@@ -71,7 +85,7 @@ export function Reviews() {
         fetchReviews(); // Refresh review list instantly
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'An error occurred.');
+      setErrorMsg(err.message || 'An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);
     }
