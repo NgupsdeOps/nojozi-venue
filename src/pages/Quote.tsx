@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
+// Event types with base rates
 const EVENT_TYPES = [
   { id: 'birthday', name: 'Birthday Party', basePrice: 3500 },
   { id: 'babyshower', name: 'Baby Shower', basePrice: 3000 },
@@ -11,6 +12,7 @@ const EVENT_TYPES = [
   { id: 'general', name: 'General & Private Function', basePrice: 3500 },
 ];
 
+// Optional extra add-ons
 const EXTRAS = [
   { id: 'furniture', name: 'Tables, Chairs & Lounge Setup', price: 1500 },
   { id: 'catering', name: 'In-House Catering & Refreshments', price: 3500 },
@@ -23,6 +25,7 @@ export function Quote() {
   const [guestCount, setGuestCount] = useState(30);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   
+  // Contact details
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -32,9 +35,10 @@ export function Quote() {
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Price calculations
   const currentEvent = EVENT_TYPES.find((e) => e.id === selectedEvent) || EVENT_TYPES[0];
   const basePrice = currentEvent.basePrice;
-  const guestSurcharge = Math.max(0, guestCount - 20) * 50;
+  const guestSurcharge = Math.max(0, guestCount - 20) * 50; // R50 per guest above 20
   const extrasTotal = selectedExtras.reduce((sum, extraId) => {
     const extra = EXTRAS.find((e) => e.id === extraId);
     return sum + (extra ? extra.price : 0);
@@ -59,33 +63,21 @@ export function Quote() {
       const selectedExtraNames = selectedExtras
         .map((id) => EXTRAS.find((e) => e.id === id)?.name)
         .filter(Boolean)
-        .join(', ');
+        .join(', ') || 'None selected';
 
-      // Build payload matching primary columns
-      const quotePayload: any = {
-        email,
-        event_type: currentEvent.name,
-        guest_count: guestCount,
-        total_price: totalPrice,
-      };
-
-      // Try inserting with optional metadata fields first
-      let { error } = await supabase.from('quotes').insert([
+      // Insert full payload into Supabase 'quotes' table
+      const { error } = await supabase.from('quotes').insert([
         {
-          ...quotePayload,
-          name,
-          phone,
-          event_date: eventDate,
+          name: name || 'Not provided',
+          email: email,
+          phone: phone || 'Not provided',
+          event_type: currentEvent.name,
+          guest_count: guestCount,
+          event_date: eventDate || 'Flexible / Not specified',
           extras: selectedExtraNames,
+          total_price: totalPrice,
         },
       ]);
-
-      // If schema error occurs due to uncreated optional columns, fallback to basic insert
-      if (error && error.message.includes('column')) {
-        console.warn('Retrying with standard quote columns due to missing database column:', error.message);
-        const fallbackRes = await supabase.from('quotes').insert([quotePayload]);
-        error = fallbackRes.error;
-      }
 
       if (error) {
         console.error('Supabase quote submission error:', error.message);
@@ -104,6 +96,7 @@ export function Quote() {
   return (
     <div className="bg-[#FAF7F2] text-stone-900 font-sans min-h-screen py-16 px-6">
       <div className="max-w-4xl mx-auto">
+        {/* HEADER */}
         <div className="text-center mb-12">
           <p className="text-xs uppercase tracking-widest text-stone-500 mb-2 font-medium">
             CUSTOMISE YOUR EVENT
@@ -117,6 +110,7 @@ export function Quote() {
         </div>
 
         {submitted ? (
+          /* SUCCESS STATE */
           <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-10 text-center max-w-2xl mx-auto shadow-sm">
             <span className="text-4xl font-serif text-[#D99B26] block mb-4">✓</span>
             <h2 className="text-3xl font-serif text-stone-950 mb-3">Quotation Submitted</h2>
@@ -142,9 +136,11 @@ export function Quote() {
             </div>
           </div>
         ) : (
+          /* FORM BUILDER */
           <form onSubmit={handleSubmitQuote} className="grid md:grid-cols-3 gap-8">
+            {/* LEFT COLUMN: OPTIONS */}
             <div className="md:col-span-2 space-y-8">
-              {/* STEP 1 */}
+              {/* STEP 1: EVENT TYPE */}
               <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-6">
                 <h3 className="text-xs uppercase tracking-widest font-semibold text-stone-500 mb-4">
                   1. SELECT EVENT TYPE
@@ -168,7 +164,7 @@ export function Quote() {
                 </div>
               </div>
 
-              {/* STEP 2 */}
+              {/* STEP 2: GUEST COUNT */}
               <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xs uppercase tracking-widest font-semibold text-stone-500">
@@ -192,7 +188,7 @@ export function Quote() {
                 </div>
               </div>
 
-              {/* STEP 3 */}
+              {/* STEP 3: OPTIONAL EXTRAS */}
               <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-6">
                 <h3 className="text-xs uppercase tracking-widest font-semibold text-stone-500 mb-4">
                   3. TAILOR WITH OPTIONAL EXTRAS
@@ -226,7 +222,7 @@ export function Quote() {
                 </div>
               </div>
 
-              {/* STEP 4 */}
+              {/* STEP 4: CONTACT INFORMATION */}
               <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-6 space-y-4">
                 <h3 className="text-xs uppercase tracking-widest font-semibold text-stone-500 mb-2">
                   4. YOUR CONTACT DETAILS
@@ -295,7 +291,7 @@ export function Quote() {
               </div>
             </div>
 
-            {/* SUMMARY CARD */}
+            {/* RIGHT COLUMN: PRICE ESTIMATE SUMMARY CARD */}
             <div className="md:col-span-1">
               <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-6 sticky top-28 shadow-sm space-y-6">
                 <div>

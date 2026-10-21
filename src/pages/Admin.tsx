@@ -64,7 +64,7 @@ export function Admin() {
   if (session) {
     return (
       <div className="bg-[#FAF7F2] min-h-[85vh] py-16 px-6 font-sans text-stone-900">
-        <div className="max-w-6xl mx-auto bg-[#F5F0E8] border border-[#E8E2D9] p-8 md:p-12 shadow-sm">
+        <div className="max-w-6xl mx-auto bg-[#F5F0E8] border border-[#E8E2D9] p-6 md:p-10 shadow-sm">
           {/* HEADER */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-[#E8E2D9] pb-6 gap-4">
             <div>
@@ -129,50 +129,53 @@ export function Admin() {
                   No quote requests recorded in Supabase yet.
                 </p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {quotes.map((q, idx) => (
-                    <div key={q.id || idx} className="bg-[#FAF7F2] p-6 border border-[#E8E2D9] shadow-xs text-xs space-y-3">
-                      <div className="flex flex-col md:flex-row justify-between border-b border-[#E8E2D9] pb-2">
+                    <div key={q.id || idx} className="bg-[#FAF7F2] p-6 border border-[#E8E2D9] shadow-xs text-xs space-y-4">
+                      {/* CARD HEADER */}
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#E8E2D9] pb-3 gap-2">
                         <div>
-                          <span className="text-[10px] uppercase tracking-widest text-[#D99B26] font-bold block mb-1">EVENT TYPE</span>
-                          <h3 className="text-base font-serif font-bold text-stone-950">{q.event_type || 'Custom Event'}</h3>
+                          <span className="text-[10px] uppercase tracking-widest text-[#D99B26] font-bold block">EVENT TYPE</span>
+                          <h3 className="text-lg font-serif font-bold text-stone-950">{q.event_type || 'Custom Event'}</h3>
                         </div>
-                        <div className="text-right mt-2 md:mt-0">
-                          <span className="text-[10px] uppercase tracking-widest text-stone-400 block mb-1">TOTAL ESTIMATE</span>
-                          <span className="text-lg font-serif font-bold text-[#D99B26]">R {Number(q.total_price || 0).toLocaleString()}</span>
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-4 gap-4 pt-2">
-                        <div>
-                          <span className="text-stone-400 block uppercase text-[9px]">Client Name</span>
-                          <span className="font-semibold text-stone-900 text-sm">{q.name || 'Not provided'}</span>
-                        </div>
-                        <div>
-                          <span className="text-stone-400 block uppercase text-[9px]">Email Address</span>
-                          <span className="font-semibold text-stone-900 text-sm">{q.email || 'Not provided'}</span>
-                        </div>
-                        <div>
-                          <span className="text-stone-400 block uppercase text-[9px]">Phone Number</span>
-                          <span className="font-semibold text-stone-900 text-sm">{q.phone || 'Not provided'}</span>
-                        </div>
-                        <div>
-                          <span className="text-stone-400 block uppercase text-[9px]">Guest Count</span>
-                          <span className="font-semibold text-stone-900 text-sm">{q.guest_count || 0} Guests</span>
+                        <div className="text-left sm:text-right">
+                          <span className="text-[10px] uppercase tracking-widest text-stone-400 block">TOTAL ESTIMATE</span>
+                          <span className="text-xl font-serif font-bold text-[#D99B26]">R {Number(q.total_price || 0).toLocaleString()}</span>
                         </div>
                       </div>
 
-                      <div className="grid md:grid-cols-3 gap-4 pt-2 border-t border-stone-200 text-[11px]">
+                      {/* CLIENT & EVENT DETAILS GRID WITH OVERFLOW / BREAK PROTECTION */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 py-2">
+                        <div className="min-w-0">
+                          <span className="text-stone-400 block uppercase text-[10px] font-semibold mb-1">Client Name</span>
+                          <span className="font-semibold text-stone-900 text-sm block truncate">{q.name || 'Not provided'}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-stone-400 block uppercase text-[10px] font-semibold mb-1">Email Address</span>
+                          <span className="font-semibold text-stone-900 text-xs block break-all">{q.email || 'Not provided'}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-stone-400 block uppercase text-[10px] font-semibold mb-1">Phone Number</span>
+                          <span className="font-semibold text-stone-900 text-sm block">{q.phone || 'Not provided'}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-stone-400 block uppercase text-[10px] font-semibold mb-1">Guest Count</span>
+                          <span className="font-semibold text-stone-900 text-sm block">{q.guest_count || 0} Guests</span>
+                        </div>
+                      </div>
+
+                      {/* FOOTER INFO GRID */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-stone-200 text-xs">
                         <div>
-                          <span className="text-stone-400 block uppercase text-[9px]">Target Event Date</span>
+                          <span className="text-stone-400 block uppercase text-[10px] font-semibold mb-1">Target Event Date</span>
                           <span className="text-stone-800 font-medium">{q.event_date || 'Flexible / Not specified'}</span>
                         </div>
                         <div>
-                          <span className="text-stone-400 block uppercase text-[9px]">Optional Add-ons</span>
+                          <span className="text-stone-400 block uppercase text-[10px] font-semibold mb-1">Optional Add-ons</span>
                           <span className="text-stone-800 font-medium">{q.extras || 'None selected'}</span>
                         </div>
                         <div>
-                          <span className="text-stone-400 block uppercase text-[9px]">Submitted At</span>
+                          <span className="text-stone-400 block uppercase text-[10px] font-semibold mb-1">Submitted At</span>
                           <span className="text-stone-800">{q.created_at ? new Date(q.created_at).toLocaleString() : ''}</span>
                         </div>
                       </div>
