@@ -65,28 +65,43 @@ export function Quote() {
         .filter(Boolean)
         .join(', ') || 'None selected';
 
-      // Insert full payload into Supabase 'quotes' table
-      const { error } = await supabase.from('quotes').insert([
-        {
-          name: name || 'Not provided',
-          email: email,
-          phone: phone || 'Not provided',
-          event_type: currentEvent.name,
-          guest_count: guestCount,
-          event_date: eventDate || 'Flexible / Not specified',
-          extras: selectedExtraNames,
-          total_price: totalPrice,
-        },
-      ]);
+      // 1. Primary payload with all detailed fields
+      const fullPayload = {
+        name: name || 'Not provided',
+        email: email,
+        phone: phone || 'Not provided',
+        event_type: currentEvent.name,
+        guest_count: guestCount,
+        event_date: eventDate || 'Flexible / Not specified',
+        extras: selectedExtraNames,
+        total_price: totalPrice,
+      };
+
+      // Attempt full insert
+      let { error } = await supabase.from('quotes').insert([fullPayload]);
+
+      // 2. If Supabase throws a column schema error, fallback to essential columns
+      if (error && error.message.includes('column')) {
+        console.warn('Retrying insert with core columns:', error.message);
+        const fallbackRes = await supabase.from('quotes').insert([
+          {
+            email: email,
+            event_type: currentEvent.name,
+            guest_count: guestCount,
+            total_price: totalPrice,
+          },
+        ]);
+        error = fallbackRes.error;
+      }
 
       if (error) {
-        console.error('Supabase quote submission error:', error.message);
+        console.error('Supabase submission error:', error.message);
         setErrorMsg(error.message);
       } else {
         setSubmitted(true);
       }
     } catch (err: any) {
-      console.error('Unexpected submission error:', err);
+      console.error('Unexpected error during submission:', err);
       setErrorMsg(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
