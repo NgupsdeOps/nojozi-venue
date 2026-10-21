@@ -1,74 +1,102 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+// Import local venue images from src/assets
+import eventBookingImg from '../assets/EventBooking.jpg';
+import poolsideImg from '../assets/Poolside.jpg';
+import chairsImg from '../assets/Chairssetup.jpg';
+import buffetImg from '../assets/Buffet.jpg';
+import cateringImg from '../assets/Catering.jpg';
+import foodGatheringImg from '../assets/Foodgathering.jpg';
+
 const SERVICES = [
   {
     title: 'Birthday Parties',
-    desc: 'From intimate gatherings to milestone celebrations, we help you host a birthday your guests will remember.',
-    img: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&q=80&w=800'
+    desc: 'Celebrate another year in style with bespoke setups and vibrant outdoor seating.',
+    img: eventBookingImg,
   },
   {
     title: 'Baby Showers',
-    desc: 'A warm, elegant setting to celebrate parents-to-be with family and friends.',
-    img: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800'
+    desc: 'A gentle, beautiful welcome for parents-to-be with peaceful poolside decor.',
+    img: chairsImg,
   },
   {
     title: 'Pool Parties',
-    desc: 'Make a splash with a relaxed poolside celebration for friends, family or colleagues.',
-    img: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&q=80&w=800'
+    desc: 'Sun, water, and good company surrounded by landscaped gardens.',
+    img: poolsideImg,
   },
   {
     title: 'Team Building',
-    desc: 'Engage and inspire your corporate group with tailored outdoors and indoor event setups.',
-    img: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=800'
+    desc: 'Reconnect your team with versatile lawn spaces and corporate function setups.',
+    img: poolsideImg,
   },
   {
     title: 'Open Buffet',
-    desc: 'A festive, generous shared dining experience prepared and styled to perfection.',
-    img: 'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&q=80&w=800'
+    desc: 'Generous, shared dining experiences tailored to your event preferences.',
+    img: buffetImg,
   },
   {
     title: 'General Events & Private Functions',
-    desc: 'Versatile venue spaces for anniversaries, dinner parties, launches, and custom gatherings.',
-    img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=800'
-  }
+    desc: 'Unforgettable moments, warm hospitality, and custom private celebrations.',
+    img: foodGatheringImg,
+  },
 ];
 
-export const Services: React.FC = () => {
+export function Services() {
   return (
-    <div className="bg-[#FAF6F0] min-h-screen py-16 px-6">
-      <div className="max-w-7xl mx-auto text-center mb-16">
-        <span className="text-xs uppercase tracking-widest text-[#C68B29] font-semibold mb-3 block">
-          SERVICES
-        </span>
-        <h1 className="font-serif text-4xl md:text-5xl text-[#1A1A1A] mb-4">
-          Event experiences
-        </h1>
-        <p className="text-gray-600 text-sm max-w-xl mx-auto">
-          Every service is hosted at our single venue and can be tailored with optional extras.
-        </p>
-      </div>
+    <div className="bg-[#FAF7F2] min-h-screen py-16 px-6 font-sans text-stone-900">
+      <div className="max-w-7xl mx-auto">
+        {/* HEADER */}
+        <div className="text-center mb-16">
+          <p className="text-xs uppercase tracking-widest text-stone-500 mb-2 font-medium">
+            EXQUISITE VENUE EXPERIENCES
+          </p>
+          <h1 className="text-4xl md:text-5xl font-serif text-stone-950 mb-4">
+            Our Offerings & Services
+          </h1>
+          <p className="text-stone-600 text-xs md:text-sm max-w-xl mx-auto leading-relaxed">
+            From intimate gatherings to lavish celebrations, explore our range of catered events and versatile venue setups.
+          </p>
+        </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {SERVICES.map((item) => (
-          <div key={item.title} className="bg-white border border-[#E8DCCB] p-5 flex flex-col justify-between shadow-sm">
-            <div>
-              <div className="h-56 overflow-hidden mb-4">
-                <img src={item.img} alt={item.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
-              </div>
-              <h3 className="font-serif text-2xl text-[#1A1A1A] mb-2">{item.title}</h3>
-              <p className="text-xs text-gray-500 mb-4 leading-relaxed">{item.desc}</p>
-              <p className="text-[10px] uppercase tracking-widest text-[#C68B29] font-semibold mb-6">PRICE ON REQUEST</p>
-            </div>
-            <Link 
-              to="/quote" 
-              className="block text-center bg-[#1A1A1A] hover:bg-[#3A3A3A] text-white text-xs font-semibold py-3 uppercase tracking-wider transition-colors"
+        {/* SERVICES GRID */}
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          {SERVICES.map((service, idx) => (
+            <div
+              key={idx}
+              className="bg-[#FAF7F2] border border-[#E8E2D9] overflow-hidden group flex flex-col justify-between"
             >
-              BUILD YOUR QUOTE
-            </Link>
-          </div>
-        ))}
+              <div>
+                <div className="h-64 overflow-hidden relative">
+                  <img
+                    src={service.img}
+                    alt={service.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-serif text-stone-950 mb-2">{service.title}</h3>
+                  <p className="text-xs text-stone-600 leading-relaxed mb-4">{service.desc}</p>
+                  <p className="text-[10px] uppercase tracking-widest text-stone-400 font-semibold mb-6">
+                    PRICE ON REQUEST
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-6 pt-0">
+                <Link
+                  to="/quote"
+                  className="w-full bg-stone-900 text-white text-xs uppercase tracking-widest font-semibold py-3.5 block text-center hover:bg-[#D99B26] transition"
+                >
+                  BUILD YOUR QUOTE
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
-};
+}
+
+export default Services;
