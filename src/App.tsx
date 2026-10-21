@@ -22,6 +22,7 @@ export function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/signin" element={<Admin />} />
         </Routes>
       </main>
       <Footer />
