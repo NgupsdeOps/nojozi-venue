@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom';
 
 // Import venue images from src/assets
-import heroBg from '../assets/hero.png';
+import homeImg from '../assets/home.jpg';
 import eventBookingImg from '../assets/EventBooking.jpg';
 import poolImg from '../assets/Poolside.jpg';
 import chairsImg from '../assets/Chairssetup.jpg';
 import buffetImg from '../assets/Buffet.jpg';
 import cateringImg from '../assets/Catering.jpg';
 import foodGatheringImg from '../assets/Foodgathering.jpg';
+
 
 const SERVICES = [
   {
@@ -48,7 +49,7 @@ export function Home() {
       {/* HERO SECTION */}
       <section
         className="relative min-h-[85vh] bg-cover bg-center flex items-center"
-        style={{ backgroundImage: `url(${heroBg})` }}
+        style={{ backgroundImage: `url(${homeImg})` }}
       >
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-5xl mx-auto px-6 py-20 text-white">
