@@ -6,7 +6,6 @@ import eventBookingImg from '../assets/EventBooking.jpg';
 import poolsideImg from '../assets/Poolside.jpg';
 import chairsImg from '../assets/Chairssetup.jpg';
 import buffetImg from '../assets/Buffet.jpg';
-import cateringImg from '../assets/Catering.jpg';
 import foodGatheringImg from '../assets/Foodgathering.jpg';
 
 const SERVICES = [
