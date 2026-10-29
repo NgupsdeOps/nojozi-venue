@@ -26,10 +26,10 @@ export function Quote() {
 
   const packagePrices: Record<string, number> = {
     'Pool Party': 7500,
-    'Baby Shower': 3000,
-    'Team Building': 3000,
-    'Open Buffet': 3000,
-    'Private Function': 3000,
+    'Wedding & Engagement': 15000,
+    'Team Building': 3500,
+    'Open Buffet': 4000,
+    'Private Function': 5000,
     'General Event': 3000,
   };
 
