@@ -22,13 +22,14 @@ export function Quote() {
 
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const packagePrices: Record<string, number> = {
     'Pool Party': 7500,
-    'Wedding & Engagement': 15000,
-    'Team Building': 3500,
-    'Open Buffet': 4000,
-    'Private Function': 5000,
+    'Baby Shower': 3000,
+    'Team Building': 3000,
+    'Open Buffet': 3000,
+    'Private Function': 3000,
     'General Event': 3000,
   };
 
@@ -50,9 +51,9 @@ export function Quote() {
 
   const calculateTotal = () => {
     let total = eventData.basePrice;
-    total += (typeof eventData.chairs === 'number' ? eventData.chairs : 0) * 25; // R25 per chair
-    total += (typeof eventData.tables === 'number' ? eventData.tables : 0) * 100; // R100 per table
-    total += (typeof eventData.securityGuards === 'number' ? eventData.securityGuards : 0) * 350; // R350 per guard
+    total += (typeof eventData.chairs === 'number' ? eventData.chairs : 0) * 25;
+    total += (typeof eventData.tables === 'number' ? eventData.tables : 0) * 100;
+    total += (typeof eventData.securityGuards === 'number' ? eventData.securityGuards : 0) * 350;
     total += themePrices[eventData.themeStyle] || 0;
     if (eventData.speakers) total += 800;
     if (eventData.microphones) total += 300;
@@ -64,26 +65,56 @@ export function Quote() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setIsSubmitting(true);
 
     const finalTotal = calculateTotal();
+    const guestCount = typeof eventData.chairs === 'number' && eventData.chairs > 0 ? eventData.chairs : 50;
+    const summaryDetails = `Theme: ${eventData.themeStyle}, Chairs: ${eventData.chairs || 0}, Tables: ${eventData.tables || 0}, Guards: ${eventData.securityGuards || 0}, Speakers: ${eventData.speakers}, Mics: ${eventData.microphones}, CDJs: ${eventData.cdjs}, Accom: ${eventData.accommodation}`;
 
-    const payload = {
+    // Standard Payload
+    const primaryPayload = {
       name: eventData.name,
       email: eventData.email,
       phone: eventData.phone,
       event_date: eventData.date,
       event_type: eventData.eventType,
-      estimated_guests: typeof eventData.chairs === 'number' ? eventData.chairs : 50,
+      estimated_guests: guestCount,
       total_price: finalTotal,
-      details: `Theme: ${eventData.themeStyle}, Chairs: ${eventData.chairs || 0}, Tables: ${eventData.tables || 0}, Security: ${eventData.securityGuards || 0}, Speakers: ${eventData.speakers}, Mics: ${eventData.microphones}, CDJs: ${eventData.cdjs}, Accommodation: ${eventData.accommodation}`,
+      details: summaryDetails,
     };
 
-    const { error } = await supabase.from('quotes').insert([payload]);
+    try {
+      // Attempt 1: Standard Insert
+      const { error: err1 } = await supabase.from('quotes').insert([primaryPayload]);
 
-    if (error) {
-      setErrorMsg('Failed to submit quote. Please try again or WhatsApp us directly.');
-    } else {
-      setSubmitted(true);
+      if (!err1) {
+        setSubmitted(true);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Attempt 2: Flexible Fallback (If table schema uses different column names)
+      const fallbackPayload = {
+        name: eventData.name,
+        email: eventData.email,
+        phone: eventData.phone,
+        event_type: `${eventData.eventType} - Total: R${finalTotal}`,
+        details: `${summaryDetails} | Date: ${eventData.date}`,
+      };
+
+      const { error: err2 } = await supabase.from('quotes').insert([fallbackPayload]);
+
+      if (!err2) {
+        setSubmitted(true);
+      } else {
+        console.error('Supabase quote submission error:', err1 || err2);
+        setErrorMsg('Could not submit quote automatically. Please click WhatsApp below or try again.');
+      }
+    } catch (err) {
+      console.error('Submission exception:', err);
+      setErrorMsg('An error occurred. Please try again or WhatsApp us.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -104,10 +135,13 @@ export function Quote() {
           <div className="text-center py-12 space-y-4">
             <h2 className="text-2xl font-serif text-stone-950">Quote Submitted Successfully!</h2>
             <p className="text-xs text-stone-600 max-w-md mx-auto">
-              Thank you! Your quotation has been securely saved to our system. We will review your selections and contact you shortly.
+              Thank you, <strong>{eventData.name}</strong>! Your quotation estimate of <strong>R{calculateTotal().toLocaleString()}</strong> has been securely logged. We will contact you shortly.
             </p>
             <button
-              onClick={() => setSubmitted(false)}
+              onClick={() => {
+                setSubmitted(false);
+                setStep(1);
+              }}
               className="mt-6 bg-stone-900 text-white text-xs uppercase tracking-widest px-6 py-3 hover:bg-[#D99B26] transition"
             >
               Build Another Quote
@@ -276,7 +310,7 @@ export function Quote() {
                 <div className="bg-[#FAF7F2] p-4 border border-[#E8E2D9] text-xs space-y-2 mb-4">
                   <div className="flex justify-between">
                     <span className="text-stone-600">Selected Event:</span>
-                    <span className="font-semibold">{eventData.eventType} (From R{eventData.basePrice})</span>
+                    <span className="font-semibold">{eventData.eventType} (From R{eventData.basePrice.toLocaleString()})</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-stone-600">Decor & Extras:</span>
@@ -297,7 +331,7 @@ export function Quote() {
                       value={eventData.name}
                       onChange={(e) => setEventData({ ...eventData, name: e.target.value })}
                       className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
-                      placeholder="e.g. Ms Thandiswa"
+                      placeholder="e.g. Lwane Maditsi"
                     />
                   </div>
                   <div>
@@ -319,7 +353,7 @@ export function Quote() {
                       value={eventData.phone}
                       onChange={(e) => setEventData({ ...eventData, phone: e.target.value })}
                       className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
-                      placeholder="069 909 0089"
+                      placeholder="0637794062"
                     />
                   </div>
                   <div>
@@ -334,7 +368,7 @@ export function Quote() {
                   </div>
                 </div>
 
-                {errorMsg && <p className="text-red-600 text-xs">{errorMsg}</p>}
+                {errorMsg && <p className="text-red-600 text-xs font-medium">{errorMsg}</p>}
 
                 <div className="flex justify-between pt-4">
                   <button
@@ -346,9 +380,10 @@ export function Quote() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-[#D99B26] text-white text-xs uppercase tracking-widest px-8 py-3.5 hover:bg-stone-900 transition font-semibold"
+                    disabled={isSubmitting}
+                    className="bg-[#D99B26] text-white text-xs uppercase tracking-widest px-8 py-3.5 hover:bg-stone-900 transition font-semibold disabled:opacity-50"
                   >
-                    Submit Quotation
+                    {isSubmitting ? 'Submitting...' : 'Submit Quotation'}
                   </button>
                 </div>
               </div>
