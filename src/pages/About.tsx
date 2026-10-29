@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 
 // Import venue images from src/assets
-import chairsSetupImg from '../assets/Chairssetup.jpg';
-import poolImg from '../assets/Poolside.jpg';
-import decorSetupImg from '../assets/Decorsetup.jpg';
+import EventBookingImg from '../assets/EventBooking.jpg';
+import cocktailtableImg from '../assets/cocktailtable.jpeg';
+import venuelookImg from '../assets/venuelook.jpeg';
 
 export function About() {
   return (
@@ -20,7 +20,7 @@ export function About() {
       {/* OUR STORY SECTION */}
       <section className="py-16 max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
         <div className="h-[400px] overflow-hidden">
-          <img src={decorSetupImg} alt="Nojozi Venue Decor Setup" className="w-full h-full object-cover" />
+          <img src={venuelookImg} alt="Nojozi Venue Look" className="w-full h-full object-cover" />
         </div>
         <div>
           <p className="text-xs uppercase tracking-widest text-stone-500 mb-2 font-medium">OUR STORY</p>
@@ -75,10 +75,10 @@ export function About() {
       {/* FEATURED PHOTO BANNER */}
       <section className="py-20 max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-8">
         <div className="h-80 overflow-hidden">
-          <img src={chairsSetupImg} alt="Venue Chairs Setup" className="w-full h-full object-cover" />
+          <img src={EventBookingImg} alt="Event Booking" className="w-full h-full object-cover" />
         </div>
         <div className="h-80 overflow-hidden">
-          <img src={poolImg} alt="Poolside Area" className="w-full h-full object-cover" />
+          <img src={cocktailtableImg} alt="Poolside Area" className="w-full h-full object-cover" />
         </div>
       </section>
     </div>

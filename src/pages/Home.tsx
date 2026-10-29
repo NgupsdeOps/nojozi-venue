@@ -2,24 +2,24 @@ import { Link } from 'react-router-dom';
 
 // Import venue images from src/assets
 import homeImg from '../assets/home.jpg';
-import eventBookingImg from '../assets/EventBooking.jpg';
+import birthday from '../assets/Birthday.jpg';
 import poolImg from '../assets/Poolside.jpg';
-import chairsImg from '../assets/Chairssetup.jpg';
+import lobolagatheringImg from '../assets/lobolagathering.jpeg';
 import buffetImg from '../assets/Buffet.jpg';
 import cateringImg from '../assets/Catering.jpg';
-import foodGatheringImg from '../assets/Foodgathering.jpg';
+import privetfunctionImg from '../assets/Privatefunction.jpeg';
 
 
 const SERVICES = [
   {
     title: 'Birthday Parties',
     desc: 'Celebrate another year in style.',
-    img: eventBookingImg,
+    img: birthday,
   },
   {
-    title: 'Baby Showers',
+    title: 'Weddings & Engagements',
     desc: 'A gentle, beautiful welcome.',
-    img: chairsImg,
+    img: lobolagatheringImg,
   },
   {
     title: 'Pool Parties',
@@ -39,7 +39,7 @@ const SERVICES = [
   {
     title: 'General Events & Private Functions',
     desc: 'Your occasion, your way.',
-    img: foodGatheringImg,
+    img: privetfunctionImg,
   },
 ];
 

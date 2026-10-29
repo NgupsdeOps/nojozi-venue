@@ -1,22 +1,22 @@
 import { Link } from 'react-router-dom';
 
 // Import local venue images from src/assets
-import eventBookingImg from '../assets/EventBooking.jpg';
+import birthdayImg from '../assets/Birthday.jpg';
 import poolsideImg from '../assets/Poolside.jpg';
-import chairsImg from '../assets/Chairssetup.jpg';
+import lobolagatheringImg from '../assets/lobolagathering.jpeg';
 import buffetImg from '../assets/Buffet.jpg';
-import foodGatheringImg from '../assets/Foodgathering.jpg';
+import privatefunctionImg from '../assets/Privatefunction.jpeg';
 
 const SERVICES = [
   {
     title: 'Birthday Parties',
     desc: 'Celebrate another year in style with bespoke setups and vibrant outdoor seating.',
-    img: eventBookingImg,
+    img: birthdayImg,
   },
   {
-    title: 'Baby Showers',
+    title: 'Weddings & Engagements',
     desc: 'A gentle, beautiful welcome for parents-to-be with peaceful poolside decor.',
-    img: chairsImg,
+    img: lobolagatheringImg,
   },
   {
     title: 'Pool Parties',
@@ -36,7 +36,7 @@ const SERVICES = [
   {
     title: 'General Events & Private Functions',
     desc: 'Unforgettable moments, warm hospitality, and custom private celebrations.',
-    img: foodGatheringImg,
+    img: privatefunctionImg,
   },
 ];
 

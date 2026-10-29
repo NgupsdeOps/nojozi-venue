@@ -1,363 +1,301 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-// Event types with base rates
-const EVENT_TYPES = [
-  { id: 'birthday', name: 'Birthday Party', basePrice: 3500 },
-  { id: 'babyshower', name: 'Baby Shower', basePrice: 3000 },
-  { id: 'poolparty', name: 'Pool Party', basePrice: 4000 },
-  { id: 'teambuilding', name: 'Team Building', basePrice: 4500 },
-  { id: 'buffet', name: 'Open Buffet Event', basePrice: 5000 },
-  { id: 'general', name: 'General & Private Function', basePrice: 3500 },
-];
-
-// Optional extra add-ons
-const EXTRAS = [
-  { id: 'furniture', name: 'Tables, Chairs & Lounge Setup', price: 1500 },
-  { id: 'catering', name: 'In-House Catering & Refreshments', price: 3500 },
-  { id: 'security', name: 'On-Site Security Personnel', price: 800 },
-  { id: 'decor', name: 'Decor Styling & Setup Assistance', price: 2000 },
-];
-
 export function Quote() {
-  const [selectedEvent, setSelectedEvent] = useState(EVENT_TYPES[0].id);
-  const [guestCount, setGuestCount] = useState(30);
-  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
-  
-  // Contact details
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [eventDate, setEventDate] = useState('');
-  
-  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
+  const [eventData, setEventData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    date: '',
+    eventType: 'Pool Party',
+    basePrice: 7500,
+    chairs: 0,
+    tables: 0,
+    securityGuards: 0,
+    soundSystem: false,
+    accommodation: false,
+  });
+
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Price calculations
-  const currentEvent = EVENT_TYPES.find((e) => e.id === selectedEvent) || EVENT_TYPES[0];
-  const basePrice = currentEvent.basePrice;
-  const guestSurcharge = Math.max(0, guestCount - 20) * 50; // R50 per guest above 20
-  const extrasTotal = selectedExtras.reduce((sum, extraId) => {
-    const extra = EXTRAS.find((e) => e.id === extraId);
-    return sum + (extra ? extra.price : 0);
-  }, 0);
-
-  const totalPrice = basePrice + guestSurcharge + extrasTotal;
-
-  const toggleExtra = (id: string) => {
-    if (selectedExtras.includes(id)) {
-      setSelectedExtras(selectedExtras.filter((item) => item !== id));
-    } else {
-      setSelectedExtras([...selectedExtras, id]);
-    }
+  const packagePrices: Record<string, number> = {
+    'Pool Party': 7500,
+    'Baby Shower': 3000,
+    'Team Building': 3000,
+    'Open Buffet': 3000,
+    'Private Function': 3000,
+    'General Event': 3000,
   };
 
-  const handleSubmitQuote = async (e: React.FormEvent) => {
+  const handleEventTypeChange = (type: string) => {
+    setEventData({
+      ...eventData,
+      eventType: type,
+      basePrice: packagePrices[type] || 3000,
+    });
+  };
+
+  const calculateTotal = () => {
+    let total = eventData.basePrice;
+    total += eventData.chairs * 25; // R25 per chair
+    total += eventData.tables * 100; // R100 per table estimate
+    total += eventData.securityGuards * 350; // R350 per guard
+    if (eventData.soundSystem) total += 1500; // Sound package
+    if (eventData.accommodation) total += 1200; // Accommodation night
+    return total;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setErrorMsg('');
 
-    try {
-      const selectedExtraNames = selectedExtras
-        .map((id) => EXTRAS.find((e) => e.id === id)?.name)
-        .filter(Boolean)
-        .join(', ') || 'None selected';
+    const finalTotal = calculateTotal();
 
-      // 1. Primary payload with all detailed fields
-      const fullPayload = {
-        name: name || 'Not provided',
-        email: email,
-        phone: phone || 'Not provided',
-        event_type: currentEvent.name,
-        guest_count: guestCount,
-        event_date: eventDate || 'Flexible / Not specified',
-        extras: selectedExtraNames,
-        total_price: totalPrice,
-      };
+    const payload = {
+      name: eventData.name,
+      email: eventData.email,
+      phone: eventData.phone,
+      event_date: eventData.date,
+      event_type: eventData.eventType,
+      estimated_guests: eventData.chairs || 50,
+      total_price: finalTotal,
+      details: `Chairs: ${eventData.chairs}, Tables: ${eventData.tables}, Security: ${eventData.securityGuards}, Sound: ${eventData.soundSystem}, Accommodation: ${eventData.accommodation}`,
+    };
 
-      // Attempt full insert
-      let { error } = await supabase.from('quotes').insert([fullPayload]);
+    const { error } = await supabase.from('quotes').insert([payload]);
 
-      // 2. If Supabase throws a column schema error, fallback to essential columns
-      if (error && error.message.includes('column')) {
-        console.warn('Retrying insert with core columns:', error.message);
-        const fallbackRes = await supabase.from('quotes').insert([
-          {
-            email: email,
-            event_type: currentEvent.name,
-            guest_count: guestCount,
-            total_price: totalPrice,
-          },
-        ]);
-        error = fallbackRes.error;
-      }
-
-      if (error) {
-        console.error('Supabase submission error:', error.message);
-        setErrorMsg(error.message);
-      } else {
-        setSubmitted(true);
-      }
-    } catch (err: any) {
-      console.error('Unexpected error during submission:', err);
-      setErrorMsg(err.message || 'An unexpected error occurred.');
-    } finally {
-      setLoading(false);
+    if (error) {
+      setErrorMsg('Failed to submit quote. Please try again or WhatsApp us directly.');
+    } else {
+      setSubmitted(true);
     }
   };
 
   return (
-    <div className="bg-[#FAF7F2] text-stone-900 font-sans min-h-screen py-16 px-6">
-      <div className="max-w-4xl mx-auto">
-        {/* HEADER */}
-        <div className="text-center mb-12">
+    <div className="bg-[#FAF7F2] min-h-screen py-16 px-6 font-sans text-stone-900">
+      <div className="max-w-3xl mx-auto bg-white border border-[#E8E2D9] p-8 md:p-12 shadow-sm">
+        <div className="text-center mb-10">
           <p className="text-xs uppercase tracking-widest text-stone-500 mb-2 font-medium">
-            CUSTOMISE YOUR EVENT
+            CUSTOMIZED BOOKING CALCULATOR
           </p>
-          <h1 className="text-4xl md:text-5xl font-serif text-stone-950 mb-4">
-            Build Your Quotation
-          </h1>
-          <p className="text-stone-600 text-xs md:text-sm max-w-xl mx-auto leading-relaxed">
-            Select your event details, guest count, and optional extras below to view an instant estimated pricing summary.
+          <h1 className="text-3xl font-serif text-stone-950">Build Your Custom Quote</h1>
+          <p className="text-xs text-stone-600 mt-2">
+            Select your venue option, customize your furniture, security, sound, and get an instant quote estimate.
           </p>
         </div>
 
         {submitted ? (
-          /* SUCCESS STATE */
-          <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-10 text-center max-w-2xl mx-auto shadow-sm">
-            <span className="text-4xl font-serif text-[#D99B26] block mb-4">✓</span>
-            <h2 className="text-3xl font-serif text-stone-950 mb-3">Quotation Submitted</h2>
-            <p className="text-stone-600 text-xs md:text-sm mb-6 leading-relaxed">
-              Thank you, <span className="font-semibold">{name || email}</span>! Your estimate of{' '}
-              <span className="font-bold text-stone-900">R {totalPrice.toLocaleString()}</span> for a{' '}
-              <span className="font-semibold">{currentEvent.name}</span> has been logged. Our venue coordinator will review your request and reach out via email shortly.
+          <div className="text-center py-12 space-y-4">
+            <h2 className="text-2xl font-serif text-stone-950">Quote Submitted Successfully!</h2>
+            <p className="text-xs text-stone-600 max-w-md mx-auto">
+              Thank you! Your quotation has been securely saved to our system. We will review your selections and contact you shortly via WhatsApp or email.
             </p>
-            <div className="flex justify-center gap-4">
-              <button
-                type="button"
-                onClick={() => setSubmitted(false)}
-                className="bg-stone-900 text-white text-xs uppercase tracking-widest font-semibold px-6 py-3 hover:bg-stone-800 transition"
-              >
-                BUILD ANOTHER QUOTE
-              </button>
-              <Link
-                to="/"
-                className="bg-[#D99B26] text-white text-xs uppercase tracking-widest font-semibold px-6 py-3 hover:bg-[#b8821d] transition"
-              >
-                RETURN HOME
-              </Link>
-            </div>
+            <button
+              onClick={() => setSubmitted(false)}
+              className="mt-6 bg-stone-900 text-white text-xs uppercase tracking-widest px-6 py-3 hover:bg-[#D99B26] transition"
+            >
+              Build Another Quote
+            </button>
           </div>
         ) : (
-          /* FORM BUILDER */
-          <form onSubmit={handleSubmitQuote} className="grid md:grid-cols-3 gap-8">
-            {/* LEFT COLUMN: OPTIONS */}
-            <div className="md:col-span-2 space-y-8">
-              {/* STEP 1: EVENT TYPE */}
-              <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-6">
-                <h3 className="text-xs uppercase tracking-widest font-semibold text-stone-500 mb-4">
-                  1. SELECT EVENT TYPE
-                </h3>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {EVENT_TYPES.map((type) => (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {step === 1 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-serif text-stone-900 font-semibold">1. Choose Event & Base Venue</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {Object.keys(packagePrices).map((type) => (
                     <button
-                      key={type.id}
                       type="button"
-                      onClick={() => setSelectedEvent(type.id)}
-                      className={`text-left p-4 border transition text-xs font-medium ${
-                        selectedEvent === type.id
-                          ? 'border-[#D99B26] bg-[#FAF7F2] text-stone-950 shadow-sm'
-                          : 'border-[#E8E2D9] bg-[#FAF7F2]/50 text-stone-600 hover:border-stone-400'
+                      key={type}
+                      onClick={() => handleEventTypeChange(type)}
+                      className={`p-4 border text-left text-xs transition ${
+                        eventData.eventType === type
+                          ? 'border-stone-900 bg-stone-900 text-white font-medium'
+                          : 'border-[#E8E2D9] hover:border-stone-400 bg-[#FAF7F2]'
                       }`}
                     >
-                      <div className="font-semibold text-sm mb-1">{type.name}</div>
-                      <div className="text-stone-400">From R {type.basePrice.toLocaleString()}</div>
+                      <p className="font-serif text-sm mb-1">{type}</p>
+                      <p className="opacity-80">From R{packagePrices[type].toLocaleString()}</p>
                     </button>
                   ))}
                 </div>
-              </div>
 
-              {/* STEP 2: GUEST COUNT */}
-              <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xs uppercase tracking-widest font-semibold text-stone-500">
-                    2. ESTIMATED GUEST COUNT
-                  </h3>
-                  <span className="text-lg font-serif text-stone-900 font-bold">{guestCount} Guests</span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="150"
-                  step="5"
-                  value={guestCount}
-                  onChange={(e) => setGuestCount(Number(e.target.value))}
-                  className="w-full accent-[#D99B26] cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-stone-400 mt-2">
-                  <span>10 Guests</span>
-                  <span>75 Guests</span>
-                  <span>150 Guests</span>
+                <div className="pt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="bg-stone-900 text-white text-xs uppercase tracking-widest px-6 py-3 hover:bg-[#D99B26] transition"
+                  >
+                    Next: Add Equipment & Add-ons &rarr;
+                  </button>
                 </div>
               </div>
+            )}
 
-              {/* STEP 3: OPTIONAL EXTRAS */}
-              <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-6">
-                <h3 className="text-xs uppercase tracking-widest font-semibold text-stone-500 mb-4">
-                  3. TAILOR WITH OPTIONAL EXTRAS
-                </h3>
-                <div className="space-y-3">
-                  {EXTRAS.map((extra) => {
-                    const isChecked = selectedExtras.includes(extra.id);
-                    return (
-                      <div
-                        key={extra.id}
-                        onClick={() => toggleExtra(extra.id)}
-                        className={`flex justify-between items-center p-4 border cursor-pointer transition text-xs ${
-                          isChecked
-                            ? 'border-[#D99B26] bg-[#FAF7F2] text-stone-950 font-semibold'
-                            : 'border-[#E8E2D9] bg-[#FAF7F2]/50 text-stone-600 hover:border-stone-400'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            readOnly
-                            className="accent-[#D99B26]"
-                          />
-                          <span>{extra.name}</span>
-                        </div>
-                        <span className="text-stone-500">+ R {extra.price.toLocaleString()}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* STEP 4: CONTACT INFORMATION */}
-              <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-6 space-y-4">
-                <h3 className="text-xs uppercase tracking-widest font-semibold text-stone-500 mb-2">
-                  4. YOUR CONTACT DETAILS
-                </h3>
-
-                {errorMsg && (
-                  <div className="p-3 bg-red-100 border border-red-200 text-red-700 text-xs">
-                    {errorMsg}
-                  </div>
-                )}
-
-                <div className="grid sm:grid-cols-2 gap-4">
+            {step === 2 && (
+              <div className="space-y-6">
+                <h2 className="text-lg font-serif text-stone-900 font-semibold">2. Custom Furniture, Security & Sound</h2>
+                
+                <div className="grid md:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="block text-[10px] uppercase tracking-widest font-semibold text-stone-700 mb-1">
-                      Full Name *
-                    </label>
+                    <label className="block text-stone-700 font-medium mb-1">Chairs (R25 per chair)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={eventData.chairs}
+                      onChange={(e) => setEventData({ ...eventData, chairs: parseInt(e.target.value) || 0 })}
+                      className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-stone-700 font-medium mb-1">Tables (R100 per table)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={eventData.tables}
+                      onChange={(e) => setEventData({ ...eventData, tables: parseInt(e.target.value) || 0 })}
+                      className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-stone-700 font-medium mb-1">Security Guards (R350 per guard)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={eventData.securityGuards}
+                      onChange={(e) => setEventData({ ...eventData, securityGuards: parseInt(e.target.value) || 0 })}
+                      className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2 text-xs">
+                  <label className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={eventData.soundSystem}
+                      onChange={(e) => setEventData({ ...eventData, soundSystem: e.target.checked })}
+                      className="w-4 h-4 accent-stone-900"
+                    />
+                    <span>Add Professional Sound System (Speakers, Mics & CDJs) — <strong>R1,500</strong></span>
+                  </label>
+
+                  <label className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={eventData.accommodation}
+                      onChange={(e) => setEventData({ ...eventData, accommodation: e.target.checked })}
+                      className="w-4 h-4 accent-stone-900"
+                    />
+                    <span>Add Overnight Accommodation Suite — <strong>R1,200</strong></span>
+                  </label>
+                </div>
+
+                <div className="flex justify-between pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="border border-stone-300 text-stone-700 text-xs uppercase tracking-widest px-6 py-3 hover:bg-stone-100 transition"
+                  >
+                    &larr; Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="bg-stone-900 text-white text-xs uppercase tracking-widest px-6 py-3 hover:bg-[#D99B26] transition"
+                  >
+                    Next: Contact & Finalize &rarr;
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-serif text-stone-900 font-semibold">3. Client Details & Summary</h2>
+                
+                <div className="bg-[#FAF7F2] p-4 border border-[#E8E2D9] text-xs space-y-2 mb-4">
+                  <div className="flex justify-between">
+                    <span className="text-stone-600">Selected Event:</span>
+                    <span className="font-semibold">{eventData.eventType} (From R{eventData.basePrice})</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-stone-600">Calculated Extras:</span>
+                    <span className="font-semibold">R{(calculateTotal() - eventData.basePrice).toLocaleString()}</span>
+                  </div>
+                  <div className="border-t border-stone-300 pt-2 flex justify-between text-sm font-serif">
+                    <span>Estimated Total:</span>
+                    <span className="text-[#D99B26] font-bold">R{calculateTotal().toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block text-stone-700 font-medium mb-1">Full Name</label>
                     <input
                       type="text"
                       required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Jane Doe"
-                      className="w-full bg-[#FAF7F2] border border-[#E8E2D9] px-4 py-2.5 text-xs focus:outline-none focus:border-[#D99B26]"
+                      value={eventData.name}
+                      onChange={(e) => setEventData({ ...eventData, name: e.target.value })}
+                      className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
+                      placeholder="e.g. Ms Thandiswa"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-widest font-semibold text-stone-700 mb-1">
-                      Email Address *
-                    </label>
+                    <label className="block text-stone-700 font-medium mb-1">Email Address</label>
                     <input
                       type="email"
                       required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="jane@example.com"
-                      className="w-full bg-[#FAF7F2] border border-[#E8E2D9] px-4 py-2.5 text-xs focus:outline-none focus:border-[#D99B26]"
+                      value={eventData.email}
+                      onChange={(e) => setEventData({ ...eventData, email: e.target.value })}
+                      className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
+                      placeholder="client@email.com"
                     />
                   </div>
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] uppercase tracking-widest font-semibold text-stone-700 mb-1">
-                      Phone Number
-                    </label>
+                    <label className="block text-stone-700 font-medium mb-1">WhatsApp / Phone Number</label>
                     <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+27 82 123 4567"
-                      className="w-full bg-[#FAF7F2] border border-[#E8E2D9] px-4 py-2.5 text-xs focus:outline-none focus:border-[#D99B26]"
+                      type="text"
+                      required
+                      value={eventData.phone}
+                      onChange={(e) => setEventData({ ...eventData, phone: e.target.value })}
+                      className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
+                      placeholder="069 909 0089"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-widest font-semibold text-stone-700 mb-1">
-                      Target Event Date
-                    </label>
+                    <label className="block text-stone-700 font-medium mb-1">Event Date</label>
                     <input
                       type="date"
-                      value={eventDate}
-                      onChange={(e) => setEventDate(e.target.value)}
-                      className="w-full bg-[#FAF7F2] border border-[#E8E2D9] px-4 py-2.5 text-xs focus:outline-none focus:border-[#D99B26]"
+                      required
+                      value={eventData.date}
+                      onChange={(e) => setEventData({ ...eventData, date: e.target.value })}
+                      className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
                     />
                   </div>
                 </div>
+
+                {errorMsg && <p className="text-red-600 text-xs">{errorMsg}</p>}
+
+                <div className="flex justify-between pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="border border-stone-300 text-stone-700 text-xs uppercase tracking-widest px-6 py-3 hover:bg-stone-100 transition"
+                  >
+                    &larr; Back
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-[#D99B26] text-white text-xs uppercase tracking-widest px-8 py-3.5 hover:bg-stone-900 transition font-semibold"
+                  >
+                    Submit Quotation
+                  </button>
+                </div>
               </div>
-            </div>
-
-            {/* RIGHT COLUMN: PRICE ESTIMATE SUMMARY CARD */}
-            <div className="md:col-span-1">
-              <div className="bg-[#F5F0E8] border border-[#E8E2D9] p-6 sticky top-28 shadow-sm space-y-6">
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-stone-500 font-medium mb-1">
-                    ESTIMATE SUMMARY
-                  </p>
-                  <h3 className="text-2xl font-serif text-stone-950">{currentEvent.name}</h3>
-                </div>
-
-                <div className="space-y-3 text-xs border-t border-b border-[#E8E2D9] py-4">
-                  <div className="flex justify-between">
-                    <span className="text-stone-600">Base Venue Rate</span>
-                    <span className="font-semibold text-stone-900">
-                      R {basePrice.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-600">Guest Fee ({guestCount} guests)</span>
-                    <span className="font-semibold text-stone-900">
-                      R {guestSurcharge.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-600">Optional Add-ons</span>
-                    <span className="font-semibold text-stone-900">
-                      R {extrasTotal.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-[10px] uppercase tracking-widest text-stone-500 block mb-1">
-                    TOTAL ESTIMATE
-                  </span>
-                  <div className="text-3xl font-serif text-[#D99B26] font-bold">
-                    R {totalPrice.toLocaleString()}
-                  </div>
-                  <p className="text-[10px] text-stone-400 mt-1">
-                    * Final quotation confirmed upon date availability review.
-                  </p>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-[#D99B26] text-white text-xs uppercase tracking-widest font-semibold py-4 hover:bg-[#b8821d] transition disabled:opacity-50 block text-center"
-                >
-                  {loading ? 'SUBMITTING...' : 'SUBMIT QUOTE REQUEST'}
-                </button>
-              </div>
-            </div>
+            )}
           </form>
         )}
       </div>
