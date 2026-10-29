@@ -6,6 +6,7 @@ import poolsideImg from '../assets/Poolside.jpg';
 import lobolagatheringImg from '../assets/lobolagathering.jpeg';
 import buffetImg from '../assets/Buffet.jpg';
 import privatefunctionImg from '../assets/Privatefunction.jpeg';
+import cateringImg from '../assets/Catering.jpg';
 
 const SERVICES = [
   {
@@ -26,7 +27,7 @@ const SERVICES = [
   {
     title: 'Team Building',
     desc: 'Reconnect your team with versatile lawn spaces and corporate function setups.',
-    img: poolsideImg,
+    img: cateringImg,
   },
   {
     title: 'Open Buffet',

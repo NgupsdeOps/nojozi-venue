@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 // Import venue images from src/assets
 import EventBookingImg from '../assets/EventBooking.jpg';
 import cocktailtableImg from '../assets/cocktailtable.jpeg';
-import venuelookImg from '../assets/venuelook.jpeg';
+import extentedvenuelookImg from '../assets/extentedvenuelook.jpeg';
 
 export function About() {
   return (
@@ -20,7 +20,7 @@ export function About() {
       {/* OUR STORY SECTION */}
       <section className="py-16 max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
         <div className="h-[400px] overflow-hidden">
-          <img src={venuelookImg} alt="Nojozi Venue Look" className="w-full h-full object-cover" />
+          <img src={extentedvenuelookImg} alt="Nojozi Venue Look" className="w-full h-full object-cover" />
         </div>
         <div>
           <p className="text-xs uppercase tracking-widest text-stone-500 mb-2 font-medium">OUR STORY</p>

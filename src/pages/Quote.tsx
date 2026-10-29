@@ -10,10 +10,13 @@ export function Quote() {
     date: '',
     eventType: 'Pool Party',
     basePrice: 7500,
-    chairs: 0,
-    tables: 0,
-    securityGuards: 0,
-    soundSystem: false,
+    chairs: '' as number | '',
+    tables: '' as number | '',
+    securityGuards: '' as number | '',
+    themeStyle: 'Standard Elegance',
+    speakers: false,
+    microphones: false,
+    cdjs: false,
     accommodation: false,
   });
 
@@ -22,11 +25,19 @@ export function Quote() {
 
   const packagePrices: Record<string, number> = {
     'Pool Party': 7500,
-    'Baby Shower': 3000,
-    'Team Building': 3000,
-    'Open Buffet': 3000,
-    'Private Function': 3000,
+    'Wedding & Engagement': 15000,
+    'Team Building': 3500,
+    'Open Buffet': 4000,
+    'Private Function': 5000,
     'General Event': 3000,
+  };
+
+  const themePrices: Record<string, number> = {
+    'Standard Elegance': 0,
+    'Bohemian Chic': 850,
+    'Royal Gold & White': 1200,
+    'Tropical Garden': 950,
+    'Modern Minimalist': 700,
   };
 
   const handleEventTypeChange = (type: string) => {
@@ -39,11 +50,14 @@ export function Quote() {
 
   const calculateTotal = () => {
     let total = eventData.basePrice;
-    total += eventData.chairs * 25; // R25 per chair
-    total += eventData.tables * 100; // R100 per table estimate
-    total += eventData.securityGuards * 350; // R350 per guard
-    if (eventData.soundSystem) total += 1500; // Sound package
-    if (eventData.accommodation) total += 1200; // Accommodation night
+    total += (typeof eventData.chairs === 'number' ? eventData.chairs : 0) * 25; // R25 per chair
+    total += (typeof eventData.tables === 'number' ? eventData.tables : 0) * 100; // R100 per table
+    total += (typeof eventData.securityGuards === 'number' ? eventData.securityGuards : 0) * 350; // R350 per guard
+    total += themePrices[eventData.themeStyle] || 0;
+    if (eventData.speakers) total += 800;
+    if (eventData.microphones) total += 300;
+    if (eventData.cdjs) total += 1200;
+    if (eventData.accommodation) total += 1200;
     return total;
   };
 
@@ -59,9 +73,9 @@ export function Quote() {
       phone: eventData.phone,
       event_date: eventData.date,
       event_type: eventData.eventType,
-      estimated_guests: eventData.chairs || 50,
+      estimated_guests: typeof eventData.chairs === 'number' ? eventData.chairs : 50,
       total_price: finalTotal,
-      details: `Chairs: ${eventData.chairs}, Tables: ${eventData.tables}, Security: ${eventData.securityGuards}, Sound: ${eventData.soundSystem}, Accommodation: ${eventData.accommodation}`,
+      details: `Theme: ${eventData.themeStyle}, Chairs: ${eventData.chairs || 0}, Tables: ${eventData.tables || 0}, Security: ${eventData.securityGuards || 0}, Speakers: ${eventData.speakers}, Mics: ${eventData.microphones}, CDJs: ${eventData.cdjs}, Accommodation: ${eventData.accommodation}`,
     };
 
     const { error } = await supabase.from('quotes').insert([payload]);
@@ -82,7 +96,7 @@ export function Quote() {
           </p>
           <h1 className="text-3xl font-serif text-stone-950">Build Your Custom Quote</h1>
           <p className="text-xs text-stone-600 mt-2">
-            Select your venue option, customize your furniture, security, sound, and get an instant quote estimate.
+            Select your venue package, decor theme, furniture, security, and individual audio equipment.
           </p>
         </div>
 
@@ -90,7 +104,7 @@ export function Quote() {
           <div className="text-center py-12 space-y-4">
             <h2 className="text-2xl font-serif text-stone-950">Quote Submitted Successfully!</h2>
             <p className="text-xs text-stone-600 max-w-md mx-auto">
-              Thank you! Your quotation has been securely saved to our system. We will review your selections and contact you shortly via WhatsApp or email.
+              Thank you! Your quotation has been securely saved to our system. We will review your selections and contact you shortly.
             </p>
             <button
               onClick={() => setSubmitted(false)}
@@ -128,7 +142,7 @@ export function Quote() {
                     onClick={() => setStep(2)}
                     className="bg-stone-900 text-white text-xs uppercase tracking-widest px-6 py-3 hover:bg-[#D99B26] transition"
                   >
-                    Next: Add Equipment & Add-ons &rarr;
+                    Next: Decor, Furniture & Sound &rarr;
                   </button>
                 </div>
               </div>
@@ -136,60 +150,103 @@ export function Quote() {
 
             {step === 2 && (
               <div className="space-y-6">
-                <h2 className="text-lg font-serif text-stone-900 font-semibold">2. Custom Furniture, Security & Sound</h2>
+                <h2 className="text-lg font-serif text-stone-900 font-semibold">2. Themed Decor, Furniture, Security & Sound</h2>
                 
-                <div className="grid md:grid-cols-2 gap-4 text-xs">
+                {/* Themed Decor */}
+                <div className="space-y-2 text-xs">
+                  <label className="block text-stone-700 font-medium">Select Themed Decor Style</label>
+                  <select
+                    value={eventData.themeStyle}
+                    onChange={(e) => setEventData({ ...eventData, themeStyle: e.target.value })}
+                    className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
+                  >
+                    {Object.keys(themePrices).map((theme) => (
+                      <option key={theme} value={theme}>
+                        {theme} {themePrices[theme] > 0 ? `(+R${themePrices[theme]})` : '(Included)'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Furniture & Security */}
+                <div className="grid md:grid-cols-3 gap-4 text-xs">
                   <div>
-                    <label className="block text-stone-700 font-medium mb-1">Chairs (R25 per chair)</label>
+                    <label className="block text-stone-700 font-medium mb-1">Chairs (R25 / chair)</label>
                     <input
                       type="number"
                       min="0"
+                      placeholder=""
                       value={eventData.chairs}
-                      onChange={(e) => setEventData({ ...eventData, chairs: parseInt(e.target.value) || 0 })}
+                      onChange={(e) => setEventData({ ...eventData, chairs: e.target.value === '' ? '' : parseInt(e.target.value) })}
                       className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
                     />
                   </div>
                   <div>
-                    <label className="block text-stone-700 font-medium mb-1">Tables (R100 per table)</label>
+                    <label className="block text-stone-700 font-medium mb-1">Tables (R100 / table)</label>
                     <input
                       type="number"
                       min="0"
+                      placeholder=""
                       value={eventData.tables}
-                      onChange={(e) => setEventData({ ...eventData, tables: parseInt(e.target.value) || 0 })}
+                      onChange={(e) => setEventData({ ...eventData, tables: e.target.value === '' ? '' : parseInt(e.target.value) })}
                       className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
                     />
                   </div>
                   <div>
-                    <label className="block text-stone-700 font-medium mb-1">Security Guards (R350 per guard)</label>
+                    <label className="block text-stone-700 font-medium mb-1">Security Guards (R350 / guard)</label>
                     <input
                       type="number"
                       min="0"
+                      placeholder=""
                       value={eventData.securityGuards}
-                      onChange={(e) => setEventData({ ...eventData, securityGuards: parseInt(e.target.value) || 0 })}
+                      onChange={(e) => setEventData({ ...eventData, securityGuards: e.target.value === '' ? '' : parseInt(e.target.value) })}
                       className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-3 pt-2 text-xs">
+                {/* Sound System Equipment Breakdown */}
+                <div className="space-y-3 pt-2 text-xs border-t border-[#E8E2D9] pt-4">
+                  <p className="font-serif text-sm font-semibold text-stone-900">Audio & Entertainment Equipment</p>
+                  
                   <label className="flex items-center space-x-3 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={eventData.soundSystem}
-                      onChange={(e) => setEventData({ ...eventData, soundSystem: e.target.checked })}
+                      checked={eventData.speakers}
+                      onChange={(e) => setEventData({ ...eventData, speakers: e.target.checked })}
                       className="w-4 h-4 accent-stone-900"
                     />
-                    <span>Add Professional Sound System (Speakers, Mics & CDJs) — <strong>R1,500</strong></span>
+                    <span>Professional PA Speakers Setup — <strong>R800</strong></span>
                   </label>
 
                   <label className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={eventData.microphones}
+                      onChange={(e) => setEventData({ ...eventData, microphones: e.target.checked })}
+                      className="w-4 h-4 accent-stone-900"
+                    />
+                    <span>Wireless Microphones (Pair) — <strong>R300</strong></span>
+                  </label>
+
+                  <label className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={eventData.cdjs}
+                      onChange={(e) => setEventData({ ...eventData, cdjs: e.target.checked })}
+                      className="w-4 h-4 accent-stone-900"
+                    />
+                    <span>DJ Console / CDJs & Mixer — <strong>R1,200</strong></span>
+                  </label>
+
+                  <label className="flex items-center space-x-3 cursor-pointer pt-2">
                     <input
                       type="checkbox"
                       checked={eventData.accommodation}
                       onChange={(e) => setEventData({ ...eventData, accommodation: e.target.checked })}
                       className="w-4 h-4 accent-stone-900"
                     />
-                    <span>Add Overnight Accommodation Suite — <strong>R1,200</strong></span>
+                    <span>Overnight Accommodation Suite — <strong>R1,200</strong></span>
                   </label>
                 </div>
 
@@ -222,7 +279,7 @@ export function Quote() {
                     <span className="font-semibold">{eventData.eventType} (From R{eventData.basePrice})</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-stone-600">Calculated Extras:</span>
+                    <span className="text-stone-600">Decor & Extras:</span>
                     <span className="font-semibold">R{(calculateTotal() - eventData.basePrice).toLocaleString()}</span>
                   </div>
                   <div className="border-t border-stone-300 pt-2 flex justify-between text-sm font-serif">
