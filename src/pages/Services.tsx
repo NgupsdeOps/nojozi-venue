@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 // Import local venue images from src/assets
-import birthdayImg from '../assets/Birthday.jpg';
+import birthdayImg from '../assets/BirthdayNew.png';
 import poolsideImg from '../assets/Poolside.jpg';
 import lobolagatheringImg from '../assets/lobolagathering.jpeg';
 import buffetImg from '../assets/Buffet.jpg';

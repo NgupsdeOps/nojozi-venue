@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 // Import venue images from src/assets
 import EventBookingImg from '../assets/EventBooking.jpg';
 import cocktailtableImg from '../assets/cocktailtable.jpeg';
-import extentedvenuelookImg from '../assets/extentedvenuelook.jpeg';
+import extentedvenuelookImg from '../assets/UpdatedVenueLook.png';
 
 export function About() {
   return (

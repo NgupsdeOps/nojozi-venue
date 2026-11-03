@@ -21,10 +21,10 @@ export function Quote() {
 
   const packagePrices: Record<string, number> = {
     'Pool Party': 7500,
-    'Baby Shower': 3000,
-    'Team Building': 3000,
-    'Open Buffet': 3000,
-    'Private Function': 3000,
+    'Weddings & Engagements': 15000,
+    'Team Building': 4500,
+    'Open Buffet': 6000,
+    'Private Function': 5000,
     'General Event': 3000,
   };
 
@@ -79,7 +79,7 @@ export function Quote() {
       `💰 *Estimated Total:* R${calculateTotal().toLocaleString()}`
     ].filter(Boolean).join('\n');
 
-    const whatsappUrl = `https://wa.me/27637794062?text=` + encodeURIComponent(detailsString);
+    const whatsappUrl = `https://wa.me/27734862637?text=` + encodeURIComponent(detailsString);
 
     // Redirect straight to WhatsApp
     window.location.href = whatsappUrl;
