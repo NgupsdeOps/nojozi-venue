@@ -25,10 +25,10 @@ export function Quote() {
 
   const packagePrices: Record<string, number> = {
     'Pool Party': 7500,
-    'Baby Shower': 3000,
-    'Team Building': 3000,
-    'Open Buffet': 3000,
-    'Private Function': 3000,
+    'Wedding & Engagement': 15000,
+    'Team Building': 3500,
+    'Open Buffet': 5000,
+    'Private Function': 4000,
     'General Event': 3000,
   };
 
@@ -82,19 +82,17 @@ export function Quote() {
       created_at: new Date().toISOString(),
     };
 
-    // 1. Try sending to Supabase (triggers email webhook if successful)
     try {
       await supabase.from('quotes').insert([quoteRecord]);
     } catch (err) {
-      console.warn('Supabase insert skipped or failed, using resilient fallback:', err);
+      console.warn('Supabase sync warning:', err);
     }
 
-    // 2. Always save to LocalStorage so Admin dashboard instantly picks it up without errors
     try {
       const existingQuotes = JSON.parse(localStorage.getItem('nojozi_quotes') || '[]');
       localStorage.setItem('nojozi_quotes', JSON.stringify([quoteRecord, ...existingQuotes]));
     } catch (e) {
-      console.error('Local storage save error:', e);
+      console.error('Local storage error:', e);
     }
 
     setIsSubmitting(false);
@@ -123,7 +121,7 @@ export function Quote() {
           <div className="text-center py-12 space-y-6">
             <h2 className="text-2xl font-serif text-stone-950">Quote Submitted Successfully!</h2>
             <p className="text-xs text-stone-600 max-w-md mx-auto leading-relaxed">
-              Thank you, <strong>{eventData.name}</strong>! Your quotation estimate of <strong>R{calculateTotal().toLocaleString()}</strong> has been logged. Click below to instantly send your details via WhatsApp or build another quote.
+              Thank you, <strong>{eventData.name}</strong>! Your quotation estimate of <strong>R{calculateTotal().toLocaleString()}</strong> has been logged. Connect with us instantly on WhatsApp to confirm your date.
             </p>
             
             <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
@@ -201,7 +199,6 @@ export function Quote() {
               <div className="space-y-6">
                 <h2 className="text-lg font-serif text-stone-900 font-semibold">2. Themed Decor, Furniture, Security & Sound</h2>
                 
-                {/* Themed Decor */}
                 <div className="space-y-2 text-xs">
                   <label className="block text-stone-700 font-medium">Select Themed Decor Style</label>
                   <select
@@ -217,14 +214,13 @@ export function Quote() {
                   </select>
                 </div>
 
-                {/* Furniture & Security */}
                 <div className="grid md:grid-cols-3 gap-4 text-xs">
                   <div>
                     <label className="block text-stone-700 font-medium mb-1">Chairs (R25 / chair)</label>
                     <input
                       type="number"
                       min="0"
-                      placeholder=""
+                      placeholder="e.g. 50"
                       value={eventData.chairs}
                       onChange={(e) => setEventData({ ...eventData, chairs: e.target.value === '' ? '' : parseInt(e.target.value) })}
                       className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
@@ -235,7 +231,7 @@ export function Quote() {
                     <input
                       type="number"
                       min="0"
-                      placeholder=""
+                      placeholder="e.g. 5"
                       value={eventData.tables}
                       onChange={(e) => setEventData({ ...eventData, tables: e.target.value === '' ? '' : parseInt(e.target.value) })}
                       className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
@@ -246,7 +242,7 @@ export function Quote() {
                     <input
                       type="number"
                       min="0"
-                      placeholder=""
+                      placeholder="e.g. 2"
                       value={eventData.securityGuards}
                       onChange={(e) => setEventData({ ...eventData, securityGuards: e.target.value === '' ? '' : parseInt(e.target.value) })}
                       className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
@@ -254,7 +250,6 @@ export function Quote() {
                   </div>
                 </div>
 
-                {/* Sound System Equipment Breakdown */}
                 <div className="space-y-3 pt-2 text-xs border-t border-[#E8E2D9] pt-4">
                   <p className="font-serif text-sm font-semibold text-stone-900">Audio & Entertainment Equipment</p>
                   
@@ -346,7 +341,7 @@ export function Quote() {
                       value={eventData.name}
                       onChange={(e) => setEventData({ ...eventData, name: e.target.value })}
                       className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
-                      placeholder="e.g. Lwane Maditsi"
+                      placeholder="e.g. Thabo Khumalo"
                     />
                   </div>
                   <div>
@@ -357,7 +352,7 @@ export function Quote() {
                       value={eventData.email}
                       onChange={(e) => setEventData({ ...eventData, email: e.target.value })}
                       className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
-                      placeholder="client@email.com"
+                      placeholder="thabo@example.com"
                     />
                   </div>
                   <div>
@@ -368,7 +363,7 @@ export function Quote() {
                       value={eventData.phone}
                       onChange={(e) => setEventData({ ...eventData, phone: e.target.value })}
                       className="w-full border border-stone-300 p-3 bg-[#FAF7F2]"
-                      placeholder="0637794062"
+                      placeholder="082 123 4567"
                     />
                   </div>
                   <div>
