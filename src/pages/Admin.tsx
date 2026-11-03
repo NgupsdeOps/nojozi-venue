@@ -1,262 +1,112 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-
-interface Quote {
-  id?: string | number;
-  name: string;
-  email: string;
-  phone: string;
-  event_date: string;
-  event_type: string;
-  total_price?: number;
-  details?: string;
-  created_at?: string;
-}
-
-interface Contact {
-  id?: string | number;
-  name: string;
-  email: string;
-  message: string;
-  created_at?: string;
-}
-
-interface Review {
-  id?: string | number;
-  name: string;
-  rating: number;
-  comment: string;
-  created_at?: string;
-}
+import React, { useState, useEffect } from 'react';
 
 export function Admin() {
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'past' | 'contacts' | 'reviews'>('upcoming');
-  const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passcode, setPasscode] = useState('');
+  const [error, setError] = useState('');
 
+  // Check if session is already saved in memory/storage
   useEffect(() => {
-    fetchAllData();
+    const session = sessionStorage.getItem('nojozi_admin_auth');
+    if (session === 'true') {
+      setIsAuthenticated(true);
+    }
   }, []);
 
-  const fetchAllData = async () => {
-    setLoading(true);
-
-    try {
-      const { data: qData } = await supabase.from('quotes').select('*').order('created_at', { ascending: false });
-      if (qData) setQuotes(qData);
-
-      const { data: cData } = await supabase.from('contacts').select('*').order('created_at', { ascending: false });
-      if (cData) setContacts(cData);
-
-      const { data: rData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
-      if (rData) setReviews(rData);
-    } catch (err) {
-      console.error('Error fetching Supabase cloud data:', err);
-    } finally {
-      setLoading(false);
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Default admin passcode - change this to your preferred PIN/password
+    if (passcode === '1234' || passcode === 'nojozi2026') {
+      setIsAuthenticated(true);
+      sessionStorage.setItem('nojozi_admin_auth', 'true');
+      setError('');
+      setPasscode('');
+    } else {
+      setError('Invalid admin passcode. Please try again.');
     }
   };
 
-  const today = new Date().toISOString().split('T')[0];
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem('nojozi_admin_auth');
+  };
 
-  const upcomingQuotes = quotes.filter((q) => {
-    if (!q.event_date) return true;
-    return q.event_date >= today;
-  }).sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''));
+  // 1. SIGN IN SCREEN
+  if (!isAuthenticated) {
+    return (
+      <div className="bg-[#FAF7F2] min-h-screen py-24 px-6 font-sans text-stone-900 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white border border-[#E8E2D9] p-8 md:p-10 shadow-sm text-center">
+          <p className="text-xs uppercase tracking-widest text-stone-500 mb-2 font-medium">
+            RESTRICTED ACCESS
+          </p>
+          <h1 className="text-2xl font-serif text-stone-950 mb-6">Admin Portal Sign In</h1>
+          
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="text-left text-xs">
+              <label className="block text-stone-700 font-medium mb-1">Passcode / PIN</label>
+              <input
+                type="password"
+                required
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                placeholder="Enter admin passcode"
+                className="w-full border border-stone-300 p-3 bg-[#FAF7F2] text-center text-stone-900 tracking-widest text-base"
+              />
+            </div>
 
-  const pastQuotes = quotes.filter((q) => {
-    if (!q.event_date) return false;
-    return q.event_date < today;
-  }).sort((a, b) => (b.event_date || '').localeCompare(a.event_date || ''));
+            {error && <p className="text-red-600 text-xs font-medium">{error}</p>}
 
+            <button
+              type="submit"
+              className="w-full bg-stone-900 text-white text-xs uppercase tracking-widest py-3.5 hover:bg-[#D99B26] transition font-semibold"
+            >
+              Sign In to Portal
+            </button>
+          </form>
+
+          <p className="text-[11px] text-stone-400 mt-6 italic">
+            Default passcodes: <code className="bg-[#FAF7F2] px-1 py-0.5 border">1234</code> or <code className="bg-[#FAF7F2] px-1 py-0.5 border">nojozi2026</code>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. DASHBOARD SCREEN (WHEN LOGGED IN)
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-16 px-6 font-sans text-stone-900">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 border-b border-[#E8E2D9] pb-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 border-b border-[#E8E2D9] pb-6 gap-4">
           <div>
             <p className="text-xs uppercase tracking-widest text-stone-500 mb-1 font-medium">
               VENUE MANAGEMENT PORTAL
             </p>
             <h1 className="text-3xl font-serif text-stone-950">Admin Dashboard</h1>
           </div>
+          
           <button
-            onClick={fetchAllData}
-            className="mt-4 md:mt-0 bg-stone-900 text-white text-xs uppercase tracking-widest px-4 py-2 hover:bg-[#D99B26] transition"
+            onClick={handleLogout}
+            className="bg-stone-900 text-white text-xs uppercase tracking-widest px-5 py-2.5 hover:bg-red-700 transition font-semibold"
           >
-            {loading ? 'Refreshing...' : 'Refresh Cloud Data'}
+            Sign Out
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-8 border-b border-[#E8E2D9] pb-4">
-          <button
-            onClick={() => setActiveTab('upcoming')}
-            className={`px-5 py-2.5 text-xs uppercase tracking-widest font-semibold transition ${
-              activeTab === 'upcoming'
-                ? 'bg-stone-900 text-white'
-                : 'bg-white border border-[#E8E2D9] text-stone-700 hover:bg-stone-100'
-            }`}
-          >
-            Upcoming Events ({upcomingQuotes.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('past')}
-            className={`px-5 py-2.5 text-xs uppercase tracking-widest font-semibold transition ${
-              activeTab === 'past'
-                ? 'bg-stone-900 text-white'
-                : 'bg-white border border-[#E8E2D9] text-stone-700 hover:bg-stone-100'
-            }`}
-          >
-            Past Events ({pastQuotes.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('contacts')}
-            className={`px-5 py-2.5 text-xs uppercase tracking-widest font-semibold transition ${
-              activeTab === 'contacts'
-                ? 'bg-stone-900 text-white'
-                : 'bg-white border border-[#E8E2D9] text-stone-700 hover:bg-stone-100'
-            }`}
-          >
-            Contact Inquiries ({contacts.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('reviews')}
-            className={`px-5 py-2.5 text-xs uppercase tracking-widest font-semibold transition ${
-              activeTab === 'reviews'
-                ? 'bg-stone-900 text-white'
-                : 'bg-white border border-[#E8E2D9] text-stone-700 hover:bg-stone-100'
-            }`}
-          >
-            Guest Reviews ({reviews.length})
-          </button>
+        {/* Placeholder / Future expansion state */}
+        <div className="bg-white border border-[#E8E2D9] p-8 md:p-12 text-center space-y-4">
+          <p className="text-xs uppercase tracking-widest text-stone-500 font-medium">
+            DIRECT WHATSAPP BOOKING WORKFLOW ACTIVE
+          </p>
+          <h2 className="text-xl font-serif text-stone-950">Management Portal Standby</h2>
+          <p className="text-xs text-stone-600 max-w-lg mx-auto leading-relaxed">
+            All client quotes and booking inquiries are currently routed directly to your primary WhatsApp line for immediate communication and quick responses.
+          </p>
+          <div className="pt-4">
+            <span className="inline-block bg-[#FAF7F2] border border-[#E8E2D9] text-stone-700 text-xs px-4 py-2 font-mono">
+              Status: Authenticated & Active
+            </span>
+          </div>
         </div>
-
-        {loading ? (
-          <div className="text-center py-20 text-stone-500 text-xs uppercase tracking-widest">
-            Loading cloud data from Supabase...
-          </div>
-        ) : (
-          <div>
-            {activeTab === 'upcoming' && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-serif text-stone-950 mb-4">Upcoming Bookings & Quotes</h2>
-                {upcomingQuotes.length === 0 ? (
-                  <p className="text-xs text-stone-500 bg-white p-8 border border-[#E8E2D9] text-center">
-                    No upcoming event quotes found.
-                  </p>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {upcomingQuotes.map((q, idx) => (
-                      <div key={idx} className="bg-white border border-[#E8E2D9] p-6 space-y-3 shadow-sm">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-[10px] uppercase tracking-widest bg-stone-900 text-white px-2 py-1 font-semibold">
-                              {q.event_type || 'Event Booking'}
-                            </span>
-                            <h3 className="text-lg font-serif text-stone-950 mt-2">{q.name}</h3>
-                          </div>
-                          {q.total_price && (
-                            <span className="text-sm font-serif font-bold text-[#D99B26]">
-                              R{Number(q.total_price).toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-stone-600 space-y-1">
-                          <p><strong>Date:</strong> {q.event_date || 'Not specified'}</p>
-                          <p><strong>Email:</strong> {q.email}</p>
-                          <p><strong>Phone:</strong> {q.phone}</p>
-                          {q.details && <p className="pt-2 text-stone-700 bg-[#FAF7F2] p-2 border border-[#E8E2D9]"><strong>Details:</strong> {q.details}</p>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'past' && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-serif text-stone-950 mb-4">Past Event History</h2>
-                {pastQuotes.length === 0 ? (
-                  <p className="text-xs text-stone-500 bg-white p-8 border border-[#E8E2D9] text-center">
-                    No past event records found.
-                  </p>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {pastQuotes.map((q, idx) => (
-                      <div key={idx} className="bg-white border border-[#E8E2D9] p-6 space-y-3 opacity-90 shadow-sm">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-[10px] uppercase tracking-widest bg-stone-500 text-white px-2 py-1 font-semibold">
-                              PAST — {q.event_type || 'Event Booking'}
-                            </span>
-                            <h3 className="text-lg font-serif text-stone-950 mt-2">{q.name}</h3>
-                          </div>
-                          {q.total_price && (
-                            <span className="text-sm font-serif font-bold text-stone-700">
-                              R{Number(q.total_price).toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-stone-600 space-y-1">
-                          <p><strong>Date:</strong> {q.event_date}</p>
-                          <p><strong>Email:</strong> {q.email}</p>
-                          <p><strong>Phone:</strong> {q.phone}</p>
-                          {q.details && <p className="pt-2 text-stone-700 bg-[#FAF7F2] p-2 border border-[#E8E2D9]"><strong>Details:</strong> {q.details}</p>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'contacts' && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-serif text-stone-950 mb-4">Client Inquiries</h2>
-                {contacts.length === 0 ? (
-                  <p className="text-xs text-stone-500 bg-white p-8 border border-[#E8E2D9] text-center">
-                    No contact messages found.
-                  </p>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {contacts.map((c, idx) => (
-                      <div key={idx} className="bg-white border border-[#E8E2D9] p-6 space-y-2">
-                        <h3 className="text-base font-serif text-stone-950">{c.name}</h3>
-                        <p className="text-xs text-stone-500">{c.email}</p>
-                        <p className="text-xs text-stone-700 bg-[#FAF7F2] p-3 border border-[#E8E2D9] mt-2">{c.message}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'reviews' && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-serif text-stone-950 mb-4">Guest Reviews</h2>
-                {reviews.length === 0 ? (
-                  <p className="text-xs text-stone-500 bg-white p-8 border border-[#E8E2D9] text-center">
-                    No guest reviews found.
-                  </p>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {reviews.map((r, idx) => (
-                      <div key={idx} className="bg-white border border-[#E8E2D9] p-6 space-y-2">
-                        <div className="flex justify-between">
-                          <h3 className="text-base font-serif text-stone-950">{r.name}</h3>
-                          <span className="text-[#D99B26] font-semibold text-xs">★ {r.rating} / 5</span>
-                        </div>
-                        <p className="text-xs text-stone-700 italic">"{r.comment}"</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
