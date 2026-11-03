@@ -39,7 +39,7 @@ export function Contact() {
     setSubmitted(true);
   };
 
-  const whatsappUrl = `https://wa.me/27637794062?text=` + encodeURIComponent(`Hi Nojozi Venue, I have an inquiry: `);
+  const whatsappUrl = `https://wa.me/27734862637?text=` + encodeURIComponent(`Hi Nojozi Venue, I have an inquiry: `);
 
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-16 px-6 font-sans text-stone-900">
