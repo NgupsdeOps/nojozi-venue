@@ -22,13 +22,14 @@ export function Quote() {
 
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const packagePrices: Record<string, number> = {
     'Pool Party': 7500,
-    'Wedding & Engagement': 15000,
-    'Team Building': 3500,
-    'Open Buffet': 4000,
-    'Private Function': 35000,
+    'Baby Shower': 3000,
+    'Team Building': 3000,
+    'Open Buffet': 3000,
+    'Private Function': 3000,
     'General Event': 3000,
   };
 
@@ -64,13 +65,13 @@ export function Quote() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setErrorMsg('');
 
     const finalTotal = calculateTotal();
     const guestCount = typeof eventData.chairs === 'number' && eventData.chairs > 0 ? eventData.chairs : 50;
     const summaryDetails = `Theme: ${eventData.themeStyle} | Chairs: ${eventData.chairs || 0} | Tables: ${eventData.tables || 0} | Guards: ${eventData.securityGuards || 0} | Speakers: ${eventData.speakers} | Mics: ${eventData.microphones} | CDJs: ${eventData.cdjs} | Accom: ${eventData.accommodation}`;
 
     const quoteRecord = {
-      id: Date.now().toString(),
       name: eventData.name,
       email: eventData.email,
       phone: eventData.phone,
@@ -79,30 +80,32 @@ export function Quote() {
       estimated_guests: guestCount,
       total_price: finalTotal,
       details: summaryDetails,
-      created_at: new Date().toISOString(),
     };
 
     try {
-      // 1. Attempt Supabase Insert
       const { error } = await supabase.from('quotes').insert([quoteRecord]);
+
       if (error) {
-        console.warn('Supabase insert warning (falling back to local storage):', error.message);
+        console.error('Supabase error:', error.message);
+        setErrorMsg('Failed to submit quote. Please check your details or WhatsApp us.');
+        setIsSubmitting(false);
+        return;
       }
+
+      setIsSubmitting(false);
+      setSubmitted(true);
     } catch (err) {
-      console.warn('Network or DB exception, using local storage fallback:', err);
+      console.error('Submission exception:', err);
+      setErrorMsg('An unexpected error occurred. Please try again.');
+      setIsSubmitting(false);
     }
-
-    // 2. Always store locally so Admin Dashboard and User Confirmation work flawlessly
-    try {
-      const existingQuotes = JSON.parse(localStorage.getItem('nojozi_quotes') || '[]');
-      localStorage.setItem('nojozi_quotes', JSON.stringify([quoteRecord, ...existingQuotes]));
-    } catch (localErr) {
-      console.error('Local storage error:', localErr);
-    }
-
-    setIsSubmitting(false);
-    setSubmitted(true);
   };
+
+  // Pre-filled automated WhatsApp message link for the venue owner / client
+  const whatsappMessage = encodeURIComponent(
+    `Hi Nojozi Venue, I just submitted a quote for a ${eventData.eventType} on ${eventData.date} for R${calculateTotal().toLocaleString()}. My name is ${eventData.name}.`
+  );
+  const whatsappUrl = `https://wa.me/27637794062?text=${whatsappMessage}`;
 
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-16 px-6 font-sans text-stone-900">
@@ -118,36 +121,31 @@ export function Quote() {
         </div>
 
         {submitted ? (
-          <div className="text-center py-12 space-y-4">
+          <div className="text-center py-12 space-y-6">
             <h2 className="text-2xl font-serif text-stone-950">Quote Submitted Successfully!</h2>
-            <p className="text-xs text-stone-600 max-w-md mx-auto">
-              Thank you, <strong>{eventData.name}</strong>! Your quotation estimate of <strong>R{calculateTotal().toLocaleString()}</strong> has been successfully received. We will contact you shortly via WhatsApp or email.
+            <p className="text-xs text-stone-600 max-w-md mx-auto leading-relaxed">
+              Thank you, <strong>{eventData.name}</strong>! Your quotation estimate of <strong>R{calculateTotal().toLocaleString()}</strong> has been securely logged and an email alert has been sent.
             </p>
-            <button
-              onClick={() => {
-                setSubmitted(false);
-                setStep(1);
-                setEventData({
-                  name: '',
-                  email: '',
-                  phone: '',
-                  date: '',
-                  eventType: 'Pool Party',
-                  basePrice: 7500,
-                  chairs: '',
-                  tables: '',
-                  securityGuards: '',
-                  themeStyle: 'Standard Elegance',
-                  speakers: false,
-                  microphones: false,
-                  cdjs: false,
-                  accommodation: false,
-                });
-              }}
-              className="mt-6 bg-stone-900 text-white text-xs uppercase tracking-widest px-6 py-3 hover:bg-[#D99B26] transition"
-            >
-              Build Another Quote
-            </button>
+            
+            <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#25D366] text-white text-xs uppercase tracking-widest px-6 py-3.5 hover:bg-[#20ba5a] transition font-semibold flex items-center justify-center gap-2"
+              >
+                💬 Chat on WhatsApp Now
+              </a>
+              <button
+                onClick={() => {
+                  setSubmitted(false);
+                  setStep(1);
+                }}
+                className="bg-stone-900 text-white text-xs uppercase tracking-widest px-6 py-3.5 hover:bg-[#D99B26] transition font-semibold"
+              >
+                Build Another Quote
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -369,6 +367,8 @@ export function Quote() {
                     />
                   </div>
                 </div>
+
+                {errorMsg && <p className="text-red-600 text-xs font-medium">{errorMsg}</p>}
 
                 <div className="flex justify-between pt-4">
                   <button
