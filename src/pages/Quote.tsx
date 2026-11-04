@@ -79,6 +79,8 @@ export function Quote() {
       `💰 *Estimated Total:* R${calculateTotal().toLocaleString()}`
     ].filter(Boolean).join('\n');
 
+    
+
     const whatsappUrl = `https://wa.me/27734862637?text=` + encodeURIComponent(detailsString);
 
     // Redirect straight to WhatsApp
