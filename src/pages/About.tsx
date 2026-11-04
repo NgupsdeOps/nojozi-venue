@@ -26,7 +26,11 @@ export function About() {
           <p className="text-xs uppercase tracking-widest text-stone-500 mb-2 font-medium">OUR STORY</p>
           <h2 className="text-3xl font-serif mb-6 text-stone-950">The venue</h2>
           <p className="text-stone-600 text-sm leading-relaxed mb-6">
-            Our full story is coming soon. In the meantime, explore our services or get in touch — we'd love to hear about your event.
+            Every great space begins with a simple feeling: the desire for a place that feels like home, surrounded by open skies and genuine warmth. Nojozi Venue was born from a vision to create a peaceful sanctuary in Johannesburg South where natural charm and heartfelt hospitality come together.
+
+Tucked away amidst lush green lawns, whispering trees, and open-air thatched pavilions, our grounds were crafted as an escape from the rush of the city. We built this space around a core belief—that life’s most cherished moments aren't created by walls or grand halls, but by where nature meets good people.
+
+Whether it’s the laughter echoing across the poolside during a summer celebration, families gathering under warm festoon lighting for a lobola negotiation, or friends sharing a long meal under the open breeze, Nojozi Venue is more than just an event space. It is a canvas for your stories, held together by good energy, serene surroundings, and memories that last long after the sun sets.
           </p>
           <Link to="/quote" className="bg-[#D99B26] text-white text-xs uppercase tracking-widest font-semibold px-6 py-3.5 hover:bg-[#b8821d] transition inline-block">
             BUILD YOUR QUOTE
