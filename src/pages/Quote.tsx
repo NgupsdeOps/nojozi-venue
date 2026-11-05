@@ -55,7 +55,7 @@ export function Quote() {
     if (type === 'r25') return 20;
     if (type === 'r35') return 50;
     if (type === 'r40') return 12;
-    return 999; // Unlimited for R50
+    return 999;
   };
 
   const getChairUnitPrice = (type: string) => {
@@ -70,18 +70,15 @@ export function Quote() {
   const calculateTotal = (): number => {
     let total = 0;
 
-    // 1. Base / Per-Person Event Calculation
     if (eventType === 'pool_party') total += 10000;
     else if (eventType === 'wedding') total += 15000;
     else if (eventType === 'team_building') total += 3500;
     else if (eventType === 'open_buffet') total += guestCount * buffetRate;
     else if (eventType === 'private_function') total += guestCount * privateRate;
 
-    // 2. Decor Theme Estimate
     const themeObj = DECOR_THEMES.find(t => t.id === selectedTheme);
     if (themeObj) total += themeObj.estimate;
 
-    // 3. Sound System Calculation (R2,500 Total if all 3 are picked)
     if (includeCDJ && includeMic && includeSpeakers) {
       total += 2500;
     } else {
@@ -90,10 +87,8 @@ export function Quote() {
       if (includeSpeakers) total += 1500;
     }
 
-    // 4. Security Guards (R1,200 per guard)
     total += securityGuards * 1200;
 
-    // 5. Full Extras (Chairs, Tables, Couches, Glass Tables)
     if (isFullPackage) {
       total += chairQuantity * getChairUnitPrice(chairType);
       total += couchSetCount * 750;
@@ -115,7 +110,7 @@ export function Quote() {
     const formData = {
       client_name: clientName,
       client_phone: clientPhone,
-      client_email: clientEmail,
+      client_email: clientEmail || 'Not Provided',
       event_type: eventType,
       event_date: eventDate,
       guests: guestCount,
@@ -124,10 +119,9 @@ export function Quote() {
       security_guards: securityGuards
     };
 
-    // 1. Send data to Formspree for email notification (Replace YOUR_FORMSPREE_ID with your actual Formspree form ID)
-  // 1. Send data to Formspree for email notification
+    // 1. Send data to Formspree for email notification
     try {
-      await fetch('https://formspree.io/f/mnpproqe', {
+      const response = await fetch('https://formspree.io/f/mnpproqe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -135,11 +129,15 @@ export function Quote() {
         },
         body: JSON.stringify(formData)
       });
+
+      if (!response.ok) {
+        console.error('Formspree error:', await response.text());
+      }
     } catch (err) {
       console.error('Formspree submission error:', err);
     }
 
-    // 2. Also save to Supabase database (Admin portal backup)
+    // 2. Save backup copy to Supabase database
     try {
       await supabase.from('quotes').insert([{
         name: clientName,
@@ -155,8 +153,8 @@ export function Quote() {
       console.error('Supabase DB log error:', err);
     }
 
-    // 3. Format WhatsApp Itemized Summary
-    let whatsappText = 
+    // 3. Format WhatsApp message text and open
+    const whatsappText = 
       `*NEW CUSTOM QUOTE REQUEST - NOJOZI VENUE*\n\n` +
       `*Client:* ${clientName}\n` +
       `*Phone:* ${clientPhone}\n` +
@@ -164,44 +162,10 @@ export function Quote() {
       `*EVENT SELECTION*\n` +
       `• Category: ${eventType.toUpperCase().replace('_', ' ')}\n` +
       `• Date: ${eventDate}\n` +
-      `• Guests: ${guestCount}\n`;
-
-    if (isPerPerson) {
-      const rateUsed = eventType === 'open_buffet' ? buffetRate : privateRate;
-      whatsappText += `• Catering Rate Per Person: R${rateUsed} (Subtotal: R${(guestCount * rateUsed).toLocaleString()})\n`;
-    }
-
-    whatsappText += `\n*THEME & DECOR*\n• ${themeObj ? `${themeObj.name} (~R${themeObj.estimate})` : 'No Theme Selected'}\n`;
-
-    whatsappText += `\n*SOUND SYSTEM*\n`;
-    if (includeCDJ && includeMic && includeSpeakers) {
-      whatsappText += `• Full Sound Package Bundle: R2,500 (CDJ + Mic + Speakers)\n`;
-    } else {
-      if (includeCDJ) whatsappText += `• CDJ / Mixer Setup: R850\n`;
-      if (includeMic) whatsappText += `• Microphone: R150\n`;
-      if (includeSpeakers) whatsappText += `• Speakers: R1,500\n`;
-      if (!includeCDJ && !includeMic && !includeSpeakers) whatsappText += `• None\n`;
-    }
-
-    if (securityGuards > 0) {
-      whatsappText += `\n*SECURITY*\n• ${securityGuards} Guards @ R1,200/ea (Total: R${securityGuards * 1200})\n`;
-    }
-
-    if (isFullPackage) {
-      whatsappText += `\n*FURNITURE & EXTRAS*\n`;
-      if (chairType !== 'none') whatsappText += `• Chairs (${chairType.toUpperCase()} @ R${getChairUnitPrice(chairType)}/ea): ${chairQuantity}\n`;
-      if (tableCount > 0) whatsappText += `• Event Tables (R200/ea): ${tableCount}\n`;
-      if (glassTableCount > 0) whatsappText += `• Glass Tables (R350/ea): ${glassTableCount}\n`;
-      if (couchSetCount > 0) whatsappText += `• Couch Sets (R750/set): ${couchSetCount}\n`;
-      if (couchSingleCount > 0) whatsappText += `• Single Couches (R500/ea): ${couchSingleCount}\n`;
-      if (cocktailTableCount > 0) whatsappText += `• Cocktail Tables (~R150/ea): ${cocktailTableCount}\n`;
-      if (cocktailChairCount > 0) whatsappText += `• Cocktail Chairs (~R45/ea): ${cocktailChairCount}\n`;
-    }
-
-    whatsappText += `\n*ESTIMATED TOTAL: R${totalPrice.toLocaleString()}*\n\n` +
+      `• Guests: ${guestCount}\n\n` +
+      `*ESTIMATED TOTAL: R${totalPrice.toLocaleString()}*\n\n` +
       `Please confirm venue and dates availability.`;
 
-    // 4. Redirect to WhatsApp (27734862637)
     window.open(`https://wa.me/27734862637?text=${encodeURIComponent(whatsappText)}`, '_blank');
   };
 
@@ -249,7 +213,7 @@ export function Quote() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Email Address (For Formspree)</label>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">Email Address</label>
                 <input
                   type="email"
                   value={clientEmail}
@@ -306,7 +270,6 @@ export function Quote() {
               </div>
             </div>
 
-            {/* Open Buffet / Catering Tier Slider & Menu Preview */}
             {eventType === 'open_buffet' && (
               <div className="mt-4 bg-[#FAF7F2] p-4 border border-[#E8E2D9] text-xs space-y-3">
                 <span className="font-semibold block text-stone-900">Open Buffet Catering Rate (R150 - R500 per person):</span>
@@ -323,7 +286,6 @@ export function Quote() {
                   <span className="font-serif font-bold text-sm text-[#D99B26] min-w-[70px]">R{buffetRate}/head</span>
                 </div>
 
-                {/* Menu Breakdown Example */}
                 <div className="bg-white p-3 border border-stone-200 text-[11px] text-stone-600 space-y-1">
                   <p className="font-semibold text-stone-900">Menu Tier Preview:</p>
                   {buffetRate <= 250 ? (
@@ -357,7 +319,7 @@ export function Quote() {
             )}
           </div>
 
-          {/* STEP 3: AFFORDABLE THEMED DECOR STYLES */}
+          {/* STEP 3: THEMED DECOR STYLES */}
           <div>
             <h2 className="text-base font-serif text-stone-950 border-b border-[#E8E2D9] pb-2 mb-4">
               3. Themed Decor Styles
@@ -439,7 +401,6 @@ export function Quote() {
               </h2>
               
               <div className="space-y-4 text-xs">
-                {/* Chair Selection Tier */}
                 <div className="bg-[#FAF7F2] p-4 border border-[#E8E2D9] grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-semibold text-stone-900 mb-1">Chair Option</label>
@@ -477,7 +438,6 @@ export function Quote() {
                   )}
                 </div>
 
-                {/* Tables, Glass Tables & Couches Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="border border-stone-200 p-3 bg-white">
                     <label className="font-semibold block text-stone-900 mb-1">Event Tables (R200 / table)</label>
