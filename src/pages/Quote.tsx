@@ -125,10 +125,14 @@ export function Quote() {
     };
 
     // 1. Send data to Formspree for email notification (Replace YOUR_FORMSPREE_ID with your actual Formspree form ID)
+  // 1. Send data to Formspree for email notification
     try {
-      await fetch('https://formspree.io/f/3128474195487358679', {
+      await fetch('https://formspree.io/f/mnpproqe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(formData)
       });
     } catch (err) {
