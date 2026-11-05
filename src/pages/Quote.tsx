@@ -48,7 +48,7 @@ export function Quote() {
 
   // Category Flags
   const isFullPackage = ['pool_party', 'wedding', 'team_building'].includes(eventType);
-  const isPerPerson = ['open_buffet', 'private_function'].includes(eventType);
+  
 
   // Max Allowed Chairs based on Tier
   const getMaxChairs = (type: string) => {
