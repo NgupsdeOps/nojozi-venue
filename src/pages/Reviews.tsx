@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Star, ExternalLink } from 'lucide-react';
 
 export function Reviews() {
