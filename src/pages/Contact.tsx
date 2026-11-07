@@ -47,7 +47,7 @@ export function Contact() {
       `*Message:* ${message}`;
 
     setLoading(false);
-    window.open(`https://wa.me/27734862637?text=${encodeURIComponent(whatsappText)}`, '_blank');
+    window.open(`https://wa.me/27699090089?text=${encodeURIComponent(whatsappText)}`, '_blank');
   };
 
   return (
@@ -75,11 +75,11 @@ export function Contact() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone className="w-4 h-4 text-[#D99B26] shrink-0" />
-                  <span>073 486 2637</span>
+                  <span>069 909 0089</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Mail className="w-4 h-4 text-[#D99B26] shrink-0" />
-                  <span>info@nojozivenue.co.za</span>
+                  <span>nojozirestaurant@gmail.com</span>
                 </div>
               </div>
             </div>

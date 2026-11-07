@@ -166,7 +166,7 @@ export function Quote() {
       `*ESTIMATED TOTAL: R${totalPrice.toLocaleString()}*\n\n` +
       `Please confirm venue and dates availability.`;
 
-    window.open(`https://wa.me/27734862637?text=${encodeURIComponent(whatsappText)}`, '_blank');
+    window.open(`https://wa.me/27699090089?text=${encodeURIComponent(whatsappText)}`, '_blank');
   };
 
   return (
