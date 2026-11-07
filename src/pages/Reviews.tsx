@@ -3,18 +3,17 @@ import { Star, ExternalLink } from 'lucide-react';
 
 export function Reviews() {
   useEffect(() => {
-    // Avoid appending duplicate script tags on component re-renders
-    const existingScript = document.querySelector(
-      'script[src*="cdn.trustindex.io/loader.js"]'
-    );
+    const script = document.createElement('script');
+    script.src = "https://cdn.trustindex.io/loader.js?951831985d9927376e967925c55";
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
 
-    if (!existingScript) {
-      const script = document.createElement('script');
-      script.src = "https://cdn.trustindex.io/loader.js?951831985d9927376e967925c55";
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-    }
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
   }, []);
 
   return (
@@ -55,9 +54,8 @@ export function Reviews() {
         </div>
 
         {/* Embedded Google Reviews Widget Wrapper */}
-        <div className="bg-white border border-[#E8E2D9] p-6 shadow-sm min-h-[300px] flex justify-center items-center">
-          {/* Trustindex automatically injects the review iframe directly into this block */}
-          <div className="w-full"></div>
+        <div className="bg-white border border-[#E8E2D9] p-6 shadow-sm min-h-[250px]">
+          <div className="trustindex-widget"></div>
         </div>
 
       </div>
