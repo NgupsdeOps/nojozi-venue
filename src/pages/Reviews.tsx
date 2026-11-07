@@ -44,7 +44,7 @@ export function Reviews() {
           </p>
           
           <a
-            href="https://www.google.com/search?q=Nojozi+Venue+Johannesburg" 
+            href="https://g.page/r/CXa7Y-NUzRIeEBE/review" 
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-stone-900 text-white text-xs uppercase tracking-widest px-6 py-2.5 hover:bg-[#D99B26] transition font-semibold"
