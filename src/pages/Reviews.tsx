@@ -45,7 +45,7 @@ export function Reviews() {
           </p>
           
           <a
-            href="https://maps.google.com" 
+            href="https://www.google.com/maps/place/Nojozi+Food+%26+Services/@-26.310977,28.010881,16z/data=!4m8!3m7!1s0x1e9507eff1785f1f:0x1e12cd54e363bb76!8m2!3d-26.3109775!4d28.0108805!9m1!1b1!16s%2Fg%2F11v011d8jg?hl=en-US&entry=ttu&g_ep=EgoyMDI2MTEwMy4wIKXMDSoASAFQAw%3D%3D" 
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-stone-900 text-white text-xs uppercase tracking-widest px-6 py-2.5 hover:bg-[#D99B26] transition font-semibold"
@@ -54,14 +54,10 @@ export function Reviews() {
           </a>
         </div>
 
-        {/* Embedded Google Reviews Container */}
-        <div className="bg-white border border-[#E8E2D9] p-6 shadow-sm min-h-[250px]">
-          <div id="trustindex-widget-container" className="w-full">
-            <p className="text-center text-stone-400 text-xs py-8">
-              Loading live Google reviews...
-            </p>
-          </div>
-        </div>
+      {/* Embedded Google Reviews Container */}
+<div className="bg-white border border-[#E8E2D9] p-6 shadow-sm min-h-[250px]">
+  <div className="trustindex-widget" data-widget-id="951831985d9927376e967925c55"></div>
+</div>
 
       </div>
     </div>
