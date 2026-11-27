@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check, Phone, Mail, MapPin } from 'lucide-react';
-import venueHero from '../assets/Updatedvenuepic.jpeg';
-import poolImg from '../assets/Poolside.jpeg';
+import venueHero from '../assets/Updatedvenuepic.png';
+import poolImg from '../assets/Poolside.jpg';
 import venueLook from '../assets/venuelook.jpeg';
 
 const VENUE_SERVICES = [

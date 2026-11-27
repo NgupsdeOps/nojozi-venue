@@ -1,8 +1,28 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import mysql from 'mysql2/promise';
 import nodemailer from 'nodemailer';
 
+interface VercelRequest {
+  method?: string;
+  body?: Record<string, any>;
+}
+
+interface VercelResponse {
+  status: (code: number) => VercelResponse;
+  json: (data: Record<string, any>) => void;
+  setHeader: (name: string, value: string) => void;
+  end: () => void;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -21,8 +41,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     soundPackage,
     specialRequests,
     estimatedTotal,
-  } = req.body;
+  } = req.body || {};
 
+  // Strict server-side validation for required fields
   if (
     !clientName ||
     !clientEmail ||
@@ -33,24 +54,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     !specialRequests
   ) {
     return res.status(400).json({
-      error: 'Please fill in all required booking and enquiry fields before submitting.',
+      error: 'Please complete all required booking and enquiry fields.',
     });
   }
 
-  const bookingRef = `NJZ-${Date.now().toString().slice(-6)}`;
+  const randomCode = Math.floor(100000 + Math.random() * 900000);
+  const bookingReference = `NJZ-${randomCode}`;
+
+  let connection: mysql.Connection | null = null;
 
   try {
-    // 1. Save booking to cloud MySQL-compatible database
-    const connection = await mysql.createConnection({
+    // 1. Connect to Cloud MySQL (TiDB Cloud Serverless)
+    connection = await mysql.createConnection({
       host: process.env.MYSQL_HOST,
       port: Number(process.env.MYSQL_PORT || 4000),
       user: process.env.MYSQL_USER,
       password: process.env.MYSQL_PASSWORD,
-      database: process.env.MYSQL_DATABASE,
-      ssl: { rejectUnauthorized: false },
+      database: process.env.MYSQL_DATABASE || 'nojozi_venue',
+      ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true,
+      },
     });
 
-    await connection.execute(
+    // 2. Insert booking record into MySQL
+    await connection.query(
       `INSERT INTO bookings (
         booking_reference,
         client_name,
@@ -65,29 +93,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         selected_extras,
         sound_package,
         special_requests,
-        estimated_total
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        estimated_total,
+        payment_status,
+        paystack_reference
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        bookingRef,
-        clientName,
-        clientEmail,
-        clientPhone,
+        bookingReference,
+        clientName.trim(),
+        clientEmail.trim(),
+        clientPhone.trim(),
         eventType,
         eventDate,
         Number(guestCount),
         cateringTier || 'None',
         cateringNotes || '',
         decorTheme || 'None',
-        JSON.stringify(selectedExtras || []),
+        JSON.stringify(Array.isArray(selectedExtras) ? selectedExtras : []),
         soundPackage || 'None',
-        specialRequests,
-        Number(estimatedTotal),
+        specialRequests.trim(),
+        Number(estimatedTotal || 0),
+        'unpaid',
+        null,
       ]
     );
 
-    await connection.end();
-
-    // 2. Send booking notification email to both addresses
+    // 3. Send dual email alerts via Nodemailer (madixstudio@gmail.com)
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -96,46 +126,59 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     });
 
-    const extrasText =
+    const formattedExtras =
       Array.isArray(selectedExtras) && selectedExtras.length > 0
         ? selectedExtras.join(', ')
         : 'None';
+
+    const emailHtml = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1d1d1f; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e5e7; border-radius: 12px;">
+        <h2 style="margin-top: 0; color: #111827;">New Venue Booking & Enquiry</h2>
+        <p style="font-size: 14px; color: #6e6e73;">Reference: <strong>${bookingReference}</strong></p>
+        <hr style="border: none; border-top: 1px solid #e5e5e7; margin: 16px 0;" />
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Client Name:</strong></td><td>${clientName}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Email:</strong></td><td>${clientEmail}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Phone / WhatsApp:</strong></td><td>${clientPhone}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Event / Conference Type:</strong></td><td>${eventType}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Preferred Date:</strong></td><td>${eventDate}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Guest Count:</strong></td><td>${guestCount}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Catering Package:</strong></td><td>${cateringTier || 'None'}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Catering / Halaal Notes:</strong></td><td>${cateringNotes || 'None'}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Decor Theme:</strong></td><td>${decorTheme || 'None'}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Sound Package:</strong></td><td>${soundPackage || 'None'}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Extras:</strong></td><td>${formattedExtras}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6e6e73;"><strong>Estimated Total:</strong></td><td><strong>R${Number(estimatedTotal || 0).toLocaleString()}</strong></td></tr>
+        </table>
+        <div style="margin-top: 16px; padding: 12px; background: #f5f5f7; border-radius: 8px; font-size: 14px;">
+          <strong>Enquiry & Special Requests:</strong><br />
+          ${specialRequests}
+        </div>
+      </div>
+    `;
 
     await transporter.sendMail({
       from: `"Nojozi Venue Bookings" <${process.env.SMTP_EMAIL}>`,
       to: 'nojozirestaurant@gmail.com, madixstudio@gmail.com',
       replyTo: clientEmail,
-      subject: `Nojozi Venue Booking & Enquiry [${bookingRef}] — ${eventType}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; color: #1c1917;">
-          <h2 style="border-bottom: 2px solid #D99B26; padding-bottom: 8px;">
-            New Booking & Enquiry — ${bookingRef}
-          </h2>
-          <p><strong>Client Name:</strong> ${clientName}</p>
-          <p><strong>Email:</strong> ${clientEmail}</p>
-          <p><strong>Phone / WhatsApp:</strong> ${clientPhone}</p>
-          <hr style="border: 0; border-top: 1px solid #e7e5e4;" />
-          <p><strong>Package / Event Type:</strong> ${eventType}</p>
-          <p><strong>Event Date:</strong> ${eventDate}</p>
-          <p><strong>Guest Count:</strong> ${guestCount}</p>
-          <p><strong>Catering Tier:</strong> ${cateringTier || 'None'}</p>
-          ${cateringNotes ? `<p><strong>Menu & Dietary Notes:</strong> ${cateringNotes}</p>` : ''}
-          <p><strong>Decor Theme:</strong> ${decorTheme || 'None'}</p>
-          <p><strong>Sound Package:</strong> ${soundPackage || 'None'}</p>
-          <p><strong>Extras & Furniture:</strong> ${extrasText}</p>
-          <p><strong>Enquiry / Event Details:</strong> ${specialRequests}</p>
-          <h3 style="background: #FAF7F2; padding: 12px; border-left: 4px solid #D99B26;">
-            Estimated Total: R ${Number(estimatedTotal).toLocaleString()}
-          </h3>
-        </div>
-      `,
+      subject: `[${bookingReference}] New ${eventType} Booking — ${clientName} (${eventDate})`,
+      html: emailHtml,
     });
 
-    return res.status(200).json({ success: true, bookingRef });
-  } catch (error) {
-    console.error('Error saving booking or sending email:', error);
-    return res.status(500).json({
-      error: 'Unable to save booking right now. Please try again or WhatsApp 069 909 0089.',
+    return res.status(200).json({
+      success: true,
+      bookingReference,
+      message: 'Booking and enquiry saved successfully.',
     });
+  } catch (error: any) {
+    console.error('Booking submission error:', error);
+    return res.status(500).json({
+      error: 'Failed to process booking request. Please try again or contact us on WhatsApp.',
+      details: error?.message || 'Internal server error',
+    });
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
   }
 }
